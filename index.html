@@ -1,0 +1,3355 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>QamqorMed</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Marck+Script&display=swap" rel="stylesheet">
+
+    <script>
+
+        tailwind.config = {
+
+            darkMode: 'class', // Enable class-based dark mode
+
+            theme: {
+
+                extend: {
+
+                    fontFamily: {
+
+                        sans: ['Nunito', 'sans-serif'],
+
+                        cursive: ['Marck Script', 'cursive'], 
+
+                    },
+
+                    colors: {
+
+                        primary: '#2A7F7F',
+
+                        dark: '#1A5F5F',
+
+                        secondary: '#E6F2F2',
+
+                        accent: '#F2994A',
+
+                        textMain: '#1F2937',
+
+                        textGray: '#9CA3AF',
+
+                        danger: '#EF4444',
+
+                    },
+
+                    boxShadow: {
+
+                        'soft': '0 10px 40px -10px rgba(42, 127, 127, 0.15)',
+
+                        'card': '0 4px 20px rgba(0, 0, 0, 0.03)',
+
+                        'glow': '0 0 15px rgba(42, 127, 127, 0.3)'
+
+                    },
+
+                    animation: {
+
+                        'scale-up': 'scaleUp 0.3s ease-out forwards',
+
+                        'slide-in': 'slideInRight 0.3s ease-out forwards',
+
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+
+                    },
+
+                    keyframes: {
+
+                        scaleUp: {
+
+                            '0%': { transform: 'scale(0.95)', opacity: '0' },
+
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+
+                        },
+
+                        slideInRight: {
+
+                            '0%': { transform: 'translateX(20px)', opacity: '0' },
+
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+
+                        },
+
+                        fadeIn: {
+
+                            '0%': { opacity: '0' },
+
+                            '100%': { opacity: '1' }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    </script>
+
+    <style>
+
+        /* Global Scrollbar Hide */
+
+        ::-webkit-scrollbar { display: none; width: 0; background: transparent; }
+
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+
+        input:focus { outline: none; border-color: #2A7F7F; background-color: #fff; box-shadow: 0 0 0 4px rgba(42, 127, 127, 0.1); }
+
+        body { background-color: #F8FAFC; -webkit-tap-highlight-color: transparent; transition: background-color 0.3s ease; overscroll-behavior-y: none; }
+
+        #app-container { max-width: 480px; margin: 0 auto; background: #FFFFFF; min-height: 100dvh; position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,0.05); transition: background-color 0.3s ease; }
+
+        .splash-bg { background-color: #E0F2FE; background: linear-gradient(135deg, #ccfbf1 0%, #ffe4e6 100%); z-index: 9999; }
+
+        /* VISA Card Styling */
+
+        .visa-card {
+
+            background: linear-gradient(135deg, #C9A961 0%, #D4B76A 20%, #E8D08D 50%, #C9A961 100%);
+
+            position: relative;
+
+            overflow: hidden;
+
+            font-family: 'Courier New', Courier, monospace;
+
+        }
+
+        .visa-card::before {
+
+            content: '';
+
+            position: absolute;
+
+            top: 0; left: 0; right: 0; bottom: 0;
+
+            background: url('https://www.transparenttextures.com/patterns/brushed-alum.png');
+
+            opacity: 0.3;
+
+        }
+
+        /* Accordion transition */
+
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+
+        .faq-answer.open { max-height: 500px; }
+
+        .faq-icon { transition: transform 0.3s ease; }
+
+        .faq-icon.rotate { transform: rotate(180deg); }
+
+        /* Dark Theme Fixes - Global Text Visibility */
+
+        body.dark-theme { background-color: #0F172A; color: #F8FAFC; }
+
+        body.dark-theme #app-container { background: #1E293B; }
+
+        body.dark-theme .bg-white { background-color: #1E293B !important; color: #F8FAFC !important; }
+
+        body.dark-theme .bg-gray-50 { background-color: #334155 !important; color: #F8FAFC !important; }
+
+        body.dark-theme .bg-gray-100 { background-color: #475569 !important; color: #F8FAFC !important; }
+
+        body.dark-theme .text-gray-900 { color: #F1F5F9 !important; }
+
+        body.dark-theme .text-gray-800 { color: #E2E8F0 !important; }
+
+        body.dark-theme .text-gray-700 { color: #CBD5E1 !important; }
+
+        body.dark-theme .text-gray-600 { color: #94A3B8 !important; }
+
+        body.dark-theme .text-gray-500 { color: #CBD5E1 !important; } /* Lightened for visibility */
+
+        body.dark-theme .text-gray-400 { color: #94A3B8 !important; }
+
+        body.dark-theme .border-gray-100 { border-color: #334155 !important; }
+
+        body.dark-theme .border-gray-50 { border-color: #1E293B !important; }
+
+        body.dark-theme input { background-color: #334155 !important; color: #F1F5F9 !important; border-color: #475569 !important; }
+
+        body.dark-theme input::placeholder { color: #94A3B8 !important; }
+
+        body.dark-theme textarea { background-color: #334155 !important; color: #F1F5F9 !important; border-color: #475569 !important; }
+
+        body.dark-theme .bg-teal-50 { background-color: rgba(42, 127, 127, 0.2) !important; }
+
+        body.dark-theme .text-primary { color: #5EEAD4 !important; } /* Lighter teal for dark mode */
+
+        body.dark-theme .bg-blue-50 { background-color: rgba(59, 130, 246, 0.2) !important; }
+
+        body.dark-theme .text-blue-700 { color: #60A5FA !important; }
+
+        /* Accessibility Mode */
+
+        body.accessibility-mode { font-size: 18px !important; }
+
+        body.accessibility-mode * { font-weight: 600 !important; letter-spacing: 0.5px !important; }
+
+        body.accessibility-mode h1 { font-size: 2.5rem !important; }
+
+        body.accessibility-mode h2 { font-size: 2rem !important; }
+
+        body.accessibility-mode h3 { font-size: 1.5rem !important; }
+
+        body.accessibility-mode p, body.accessibility-mode span, body.accessibility-mode button { font-size: 1.1rem !important; }
+
+        body.accessibility-mode .text-xs { font-size: 0.9rem !important; }
+
+        body.accessibility-mode .text-sm { font-size: 1rem !important; }
+
+    </style>
+
+</head>
+
+<body>
+
+<!-- Audio for Dark Mode -->
+
+<audio id="theme-audio" src="https://drive.google.com/uc?export=download&id=1FVZKSgHpFW_Gwb76RP03swqAfe7vsy_U"></audio>
+
+<div id="app-container">
+
+    <!-- WELCOME / SPLASH SCREEN -->
+
+    <div id="screen-splash" class="hidden absolute inset-0 flex-col items-center justify-center splash-bg">
+
+        <div class="relative z-10 text-center animate-scale-up">
+
+            <h1 id="splash-greeting-text" class="font-cursive text-7xl text-primary drop-shadow-sm">Привет</h1>
+
+            <p class="font-sans text-teal-800 mt-4 text-sm font-bold tracking-widest uppercase opacity-80">QamqorMed</p>
+
+        </div>
+
+    </div>
+
+    <!-- 1. ONBOARDING SCREEN -->
+
+    <div id="screen-onboarding" class="hidden h-[100dvh] flex flex-col justify-between p-6 relative bg-white">
+
+        <div class="absolute top-6 left-6 z-20 mt-4">
+
+             <button id="onboarding-back-btn" onclick="prevOnboarding()" class="p-2 -ml-2 rounded-full hover:bg-gray-50 transition-all opacity-0 pointer-events-none">
+
+                <i class="fas fa-chevron-left text-gray-600 text-xl"></i>
+
+            </button>
+
+        </div>
+
+        <div class="flex-1 flex flex-col justify-center items-center mt-10">
+
+            <div id="onboarding-image" class="w-72 h-72 mb-8 relative flex justify-center items-center"></div>
+
+            <div class="text-center w-full max-w-xs px-4" id="onboarding-text"></div>
+
+            <div class="flex space-x-2 mt-10" id="onboarding-dots"></div>
+
+        </div>
+
+        <div class="w-full mb-6">
+
+            <button onclick="nextOnboarding()" id="onboarding-btn" class="w-full bg-primary hover:bg-dark text-white font-bold py-4 rounded-2xl shadow-glow transition-all active:scale-95 text-lg" data-key="next_btn">Далее</button>
+
+        </div>
+
+    </div>
+
+    <!-- 2. LOGIN SCREEN -->
+
+    <div id="screen-login" class="hidden h-[100dvh] flex flex-col p-6 bg-white animate-fade-in">
+
+        <div class="mt-4 mb-8"><button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button></div>
+
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2" data-key="login_title">Войти</h1>
+
+        <p class="text-gray-500 text-sm mb-8" data-key="login_subtitle">Приятно видеть вас снова!</p>
+
+        <form onsubmit="handleLogin(event)" class="flex flex-col gap-5">
+
+            <input type="email" id="login-email" placeholder="Email" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4 transition-all" value="user123@gmail.com">
+
+            <div class="relative">
+
+                <input type="password" id="login-pass" placeholder="Password" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4 transition-all" value="Password123">
+
+                <button type="button" onclick="togglePass('login-pass')" class="absolute right-4 top-4 text-gray-400 hover:text-primary transition-colors"><i class="far fa-eye-slash"></i></button>
+
+            </div>
+
+            <div class="flex justify-end"><button type="button" onclick="goToScreen('forgot')" class="text-primary text-sm font-bold hover:underline" data-key="forgot_pass">Забыли пароль?</button></div>
+
+            <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-glow mt-4 flex justify-center items-center gap-2 active:scale-95 transition-transform"><span id="login-btn-text" data-key="login_title">Войти</span><div id="login-loader" class="loader hidden border-white border-t-transparent"></div></button>
+
+        </form>
+
+        <div class="mt-auto mb-6 flex justify-center text-sm"><span class="text-gray-500" data-key="no_account">Нету аккаунта? </span><button onclick="goToScreen('register')" class="text-primary font-bold ml-1 hover:underline" data-key="create">Создать</button></div>
+
+    </div>
+
+    <!-- 2.1 FORGOT PASSWORD SCREEN -->
+
+    <div id="screen-forgot" class="hidden h-[100dvh] flex flex-col p-6 bg-white animate-fade-in">
+
+        <div class="mt-4 mb-6"><button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button></div>
+
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2" data-key="forgot_pass">Забыли пароль?</h1>
+
+        <p class="text-gray-500 text-sm mb-8 leading-relaxed" data-key="forgot_subtitle">Введите свою почту, чтобы сбросить пароль. Мы отправим инструкции по восстановлению.</p>
+
+        <form onsubmit="handleForgot(event)" class="flex flex-col gap-4">
+
+            <div>
+
+                <label class="block mb-2 text-sm font-medium text-gray-700">Email</label>
+
+                <input type="email" placeholder="email@example.com" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4 transition-all" required>
+
+            </div>
+
+            <button type="submit" class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-glow mt-4 active:scale-95 transition-transform" data-key="reset_pass">Сбросить пароль</button>
+
+        </form>
+
+    </div>
+
+    <!-- 3. REGISTER SCREEN -->
+
+    <div id="screen-register" class="hidden h-[100dvh] flex flex-col p-6 bg-white animate-fade-in overflow-y-auto">
+
+        <div class="mt-4 mb-6"><button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button></div>
+
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2" data-key="register_title">Создать аккаунт</h1>
+
+        <p class="text-gray-500 text-sm mb-6" data-key="register_subtitle">Добро пожаловать!</p>
+
+        <form onsubmit="handleRegister(event)" class="flex flex-col gap-4">
+
+            <input type="text" id="reg-name" placeholder="Имя Фамилия" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4" required>
+
+            <input type="email" id="reg-email" placeholder="Эл. почта" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4" required>
+
+            <!-- IIN Input moved here -->
+
+            <input type="text" id="reg-iin" placeholder="ИИН" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4" required maxlength="12" pattern="\d{12}" title="12 цифр">
+
+            <div class="relative">
+
+                <input type="password" id="reg-pass" placeholder="Придумайте пароль" oninput="validatePassword(this.value)" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4" required>
+
+                <button type="button" onclick="togglePass('reg-pass')" class="absolute right-4 top-4 text-gray-400"><i class="far fa-eye-slash"></i></button>
+
+            </div>
+
+            <div class="space-y-2 mt-2 pl-1" id="password-requirements">
+
+                <div class="flex items-center gap-2 text-xs text-gray-400 transition-colors" id="req-length">
+
+                    <div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center icon-box"><i class="fas fa-check text-[8px] text-white hidden"></i></div> 
+
+                    <span data-key="min_length">Мин длина 8 символов</span>
+
+                </div>
+
+                <div class="flex items-center gap-2 text-xs text-gray-400 transition-colors" id="req-digits">
+
+                     <div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center icon-box"><i class="fas fa-check text-[8px] text-white hidden"></i></div>
+
+                     <span data-key="min_digits">Мин 2 цифры</span>
+
+                </div>
+
+                <div class="flex items-center gap-2 text-xs text-gray-400 transition-colors" id="req-capital">
+
+                     <div class="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center icon-box"><i class="fas fa-check text-[8px] text-white hidden"></i></div>
+
+                     <span data-key="min_capital">Мин 1 большой символ</span>
+
+                </div>
+
+            </div>
+
+            <button type="submit" id="reg-submit-btn" class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-glow mt-4 active:scale-95 transition-transform opacity-50 pointer-events-none" data-key="create_account">Создать аккаунт</button>
+
+        </form>
+
+        <div class="mt-8 flex justify-center text-sm pb-8"><span class="text-gray-500" data-key="already_registered">Уже зарегистрированы? </span><button onclick="goToScreen('login')" class="text-primary font-bold ml-1 hover:underline" data-key="login_title">Войти</button></div>
+
+    </div>
+
+    <!-- 5. MAIN APP LAYOUT -->
+<div id="screen-doctor-main" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-fade-in relative">
+        <div class="px-6 pt-12 pb-4 bg-white sticky top-0 z-20 shadow-sm rounded-b-[2rem]">
+            <div class="flex justify-between items-center mb-2">
+                <h1 class="text-2xl font-bold text-gray-900">Кабинет врача</h1>
+                <button onclick="handleLogout()" class="text-red-500 bg-red-50 w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-100 transition-colors active:scale-95">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+            <p class="text-sm text-gray-500 font-medium">doctor123@qamqormed.gov.kz</p>
+        </div>
+
+        <div class="p-6 flex-1 overflow-y-auto space-y-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center">
+                <div class="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                    <i class="fas fa-file-medical-alt text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-gray-800 text-lg mb-2">Внести результаты</h3>
+                <p class="text-sm text-gray-500 mb-6 px-4">Отправьте результаты анализов напрямую в медкарту пациента</p>
+                <button onclick="openDoctorAddAnalysis()" class="bg-primary text-white w-full py-4 rounded-2xl font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform">
+                    <i class="fas fa-plus mr-2"></i> Добавить анализ
+                </button>
+            </div>
+
+            <div>
+                <h2 class="font-bold text-gray-800 text-lg mb-4">Недавние пациенты</h2>
+                <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-center h-32 text-gray-400">
+                    <p class="text-sm font-bold">Список пока пуст</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-main" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-fade-in relative">
+
+        <div class="px-6 pt-12 pb-4 bg-white sticky top-0 z-20 shadow-sm transition-all duration-300" id="main-header">
+
+            <div class="flex justify-between items-center mb-4">
+
+                <button onclick="toggleCityModal()" class="flex items-center gap-2 text-gray-800 active:opacity-70">
+
+                    <i class="fas fa-map-marker-alt text-primary text-lg"></i>
+
+                    <span class="text-lg font-bold" id="current-city">Астана</span>
+
+                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+
+                </button>
+
+                <button onclick="goToScreen('notifications')" class="relative p-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
+
+                    <i class="far fa-bell text-gray-700 text-xl"></i>
+
+                    <span id="notif-dot" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+
+                </button>
+
+            </div>
+
+            <div class="relative transition-all duration-300 overflow-hidden" id="search-container">
+
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+
+                <input type="text" id="search-input" oninput="filterDoctors(this.value)" placeholder="Ищи врача, услугу..." class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl text-sm focus:ring-1 focus:ring-primary shadow-sm">
+
+            </div>
+
+        </div>
+
+        <div id="main-scroll-area" class="flex-1 overflow-y-auto pb-24 scrollbar-hide">
+
+            <!-- HOME TAB -->
+
+            <div id="tab-home" class="animate-fade-in">
+
+                <div class="px-6 mt-6">
+
+                    <div class="flex justify-between items-end mb-4">
+
+                        <h2 class="font-bold text-gray-800 text-lg" data-key="popular_directions">Популярные направления</h2>
+
+                        <button onclick="goToScreen('all-categories')" class="text-primary text-sm font-bold hover:opacity-80" data-key="all">Все</button>
+
+                    </div>
+
+                    <div class="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+
+                        <div onclick="filterByCategory('Стоматолог')" class="flex-shrink-0 bg-white rounded-3xl p-4 px-5 flex items-center gap-3 shadow-card border border-gray-100 min-w-[150px] cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"><div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-primary"><i class="fas fa-tooth text-lg"></i></div><div><p class="font-bold text-sm text-gray-800" data-key="dentist">Стоматолог</p><p class="text-xs text-gray-400">21 док.</p></div></div>
+
+                        <div onclick="filterByCategory('Невролог')" class="flex-shrink-0 bg-white rounded-3xl p-4 px-5 flex items-center gap-3 shadow-card border border-gray-100 min-w-[150px] cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"><div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><i class="fas fa-brain text-lg"></i></div><div><p class="font-bold text-sm text-gray-800" data-key="neurologist">Невролог</p><p class="text-xs text-gray-400">19 док.</p></div></div>
+
+                        <div onclick="filterByCategory('Кардиолог')" class="flex-shrink-0 bg-white rounded-3xl p-4 px-5 flex items-center gap-3 shadow-card border border-gray-100 min-w-[150px] cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"><div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500"><i class="fas fa-heartbeat text-lg"></i></div><div><p class="font-bold text-sm text-gray-800" data-key="cardiologist">Кардиолог</p><p class="text-xs text-gray-400">15 док.</p></div></div>
+
+                    </div>
+
+                </div>
+
+                <div class="px-6 mt-8">
+
+                    <div class="flex justify-between items-end mb-4">
+
+                        <h2 class="font-bold text-gray-800 text-lg" data-key="doctors_nearby">Врачи рядом</h2>
+
+                        <button onclick="goToScreen('all-doctors')" class="text-primary text-sm font-bold hover:opacity-80" data-key="all">Все</button>
+
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4" id="doctors-home-grid"></div>
+
+                </div>
+
+            </div>
+
+            <!-- SERVICES TAB -->
+
+            <div id="tab-services" class="hidden animate-fade-in px-6 mt-6">
+
+                <h2 class="text-2xl font-bold text-gray-800 mb-6" data-key="services">Услуги</h2>
+
+                <div class="space-y-4">
+
+                    <div onclick="goToScreen('all-categories')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+
+                        <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600"><i class="fas fa-user-md"></i></div><span class="font-bold text-gray-800" data-key="make_appointment">Записаться к врачу</span></div><i class="fas fa-chevron-right text-gray-300"></i>
+
+                    </div>
+
+                    <div onclick="goToScreen('appointments')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+
+                        <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600"><i class="fas fa-calendar-check"></i></div><span class="font-bold text-gray-800" data-key="my_appointments">Мои приёмы</span></div><i class="fas fa-chevron-right text-gray-300"></i>
+
+                    </div>
+
+                    <div onclick="goToScreen('vaccination')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+
+                         <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><i class="fas fa-syringe"></i></div><span class="font-bold text-gray-800" data-key="vaccination_calendar">Вакцинация</span></div><i class="fas fa-chevron-right text-gray-300"></i>
+
+                    </div>
+
+                    <div onclick="goToScreen('faq')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+
+                        <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500"><i class="fas fa-question"></i></div><span class="font-bold text-gray-800" data-key="faq_title">Часто задаваемые вопросы</span></div><i class="fas fa-chevron-right text-gray-300"></i>
+
+                    </div>
+
+                     <div onclick="goToScreen('support-chat')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+
+                         <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-500"><i class="fas fa-headset"></i></div><span class="font-bold text-gray-800" data-key="support_chat">Чат поддержки</span></div><i class="fas fa-chevron-right text-gray-300"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- CHAT TAB -->
+
+            <div id="tab-chat" class="hidden h-full flex flex-col bg-gray-50 animate-fade-in pb-24">
+
+                <div class="px-6 pt-12 pb-4">
+
+                    <h1 class="text-2xl font-bold text-gray-900" data-key="chats_title">Чаты</h1>
+
+                </div>
+
+                <div id="chats-list" class="flex-1 overflow-y-auto px-6 space-y-4">
+
+                    <!-- Chats will be injected here -->
+
+                </div>
+
+                <div id="chats-empty" class="flex-1 flex flex-col items-center justify-center text-gray-400 hidden">
+
+                    <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4"><i class="far fa-comments text-4xl text-gray-300"></i></div>
+
+                    <h3 class="font-bold text-gray-600 text-lg mb-2" data-key="empty">Пусто</h3>
+
+                    <p data-key="no_chats" class="text-sm">У вас пока нет активных чатов.</p>
+
+                </div>
+
+            </div>
+
+            <!-- PROFILE TAB -->
+
+            <div id="tab-profile" class="hidden animate-fade-in px-6 mt-6 pb-24">
+
+                <h2 class="text-2xl font-bold text-gray-800 mb-6" data-key="profile">Профиль</h2>
+
+                <div class="flex items-center gap-5 mb-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
+
+                    <div class="relative cursor-pointer group" onclick="togglePhotoModal()">
+
+                        <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-primary bg-gray-100 flex items-center justify-center shadow-md">
+
+                            <img id="profile-avatar" src="https://i.pinimg.com/236x/c0/02/82/c002826ebc873be910f0fb44bc62f219.jpg" class="w-full h-full object-cover">
+
+                        </div>
+
+                        <div class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-camera text-white"></i></div>
+
+                    </div>
+
+                    <div><h3 class="text-xl font-bold text-gray-800" id="profile-name">...</h3><p class="text-sm text-gray-400 font-medium" id="profile-email">...</p></div>
+
+                </div>
+
+                <!-- Hidden file input -->
+
+                <input type="file" id="avatar-upload" hidden onchange="handleProfilePhotoChange(event)" accept="image/*">
+
+                <div class="space-y-3">
+
+                    <button onclick="goToScreen('personal-data')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-[0.98] transition-all group">
+
+                        <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-primary"><i class="far fa-user"></i></div><span class="font-bold text-gray-700" data-key="personal_data">Личные данные</span><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+
+                    </button>
+
+                    <button onclick="goToScreen('analyses')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-[0.98] transition-all group">
+
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500"><i class="fas fa-microscope"></i></div><span class="font-bold text-gray-700" data-key="analyses">Мои анализы</span><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+
+                    </button>
+
+                    <button onclick="goToScreen('settings')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-[0.98] transition-all group">
+
+                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><i class="fas fa-cog"></i></div><span class="font-bold text-gray-700" data-key="settings">Настройки</span><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+
+                    </button>
+
+                    <button onclick="goToScreen('payments')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-[0.98] transition-all group">
+
+                         <div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500"><i class="far fa-credit-card"></i></div><span class="font-bold text-gray-700" data-key="payment">Оплата</span><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+
+                    </button>
+
+                    <button onclick="handleLogout()" class="w-full bg-red-50 p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-red-50 mt-8 text-red-500 active:scale-[0.98] transition-all group hover:bg-red-500 hover:text-white">
+
+                         <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-red-500"><i class="fas fa-sign-out-alt"></i></div><span class="font-bold" data-key="logout">Выйти</span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="bg-white rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] px-8 py-5 flex justify-between items-center absolute bottom-0 w-full z-30">
+
+            <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 text-primary transition-all duration-300 transform hover:-translate-y-1"><div class="w-12 h-12 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div></button>
+
+            <button onclick="switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-folder text-xl"></i></button>
+
+            <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-comment-dots text-xl"></i></button>
+
+            <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-user text-xl"></i></button>
+
+        </div>
+
+    </div>
+
+    <!-- SCREENS -->
+
+    <!-- DOCTOR DETAIL SCREEN -->
+
+    <div id="screen-doctor-detail" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-40 overflow-y-auto">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="doc_info">Информация о враче</h1>
+
+        </div>
+
+        <div class="p-6 flex-1 overflow-y-auto pb-24">
+
+            <!-- Doctor Card with Photo -->
+
+            <div class="flex gap-4 mb-6">
+
+                <div class="w-24 h-24 rounded-2xl overflow-hidden border-2 border-gray-100 shadow-md flex-shrink-0">
+
+                    <img id="doc-detail-img" src="" class="w-full h-full object-cover">
+
+                </div>
+
+                <div class="flex-1">
+
+                    <h1 id="doc-detail-name" class="text-2xl font-bold text-gray-900 mb-1">...</h1>
+
+                    <p id="doc-detail-spec" class="text-primary font-semibold mb-2">...</p>
+
+                    <div class="flex items-center gap-3 text-sm">
+
+                        <span class="flex items-center gap-1 text-yellow-500 font-bold">
+
+                            <i class="fas fa-star text-xs"></i>
+
+                            <span id="doc-detail-rate-mini">...</span>
+
+                        </span>
+
+                        <span class="text-gray-400">•</span>
+
+                        <span class="text-gray-600 font-medium" id="doc-detail-exp-mini">...</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="flex gap-3 mb-6">
+
+                <div class="flex-1 bg-gray-50 p-4 rounded-2xl text-center">
+
+                    <p class="text-gray-400 text-xs mb-1" data-key="exp_label">Опыт</p>
+
+                    <p id="doc-detail-exp" class="font-bold text-primary">...</p>
+
+                </div>
+
+                <div class="flex-1 bg-gray-50 p-4 rounded-2xl text-center">
+
+                    <p class="text-gray-400 text-xs mb-1" data-key="rating_label">Рейтинг</p>
+
+                    <p id="doc-detail-rate" class="font-bold text-yellow-500 flex justify-center items-center gap-1"><i class="fas fa-star"></i> ...</p>
+
+                </div>
+
+                <div class="flex-1 bg-gray-50 p-4 rounded-2xl text-center">
+
+                    <p class="text-gray-400 text-xs mb-1" data-key="city_label">Город</p>
+
+                    <p id="doc-detail-city" class="font-bold text-gray-700">...</p>
+
+                </div>
+
+            </div>
+
+            <h3 class="font-bold text-lg mb-3" data-key="about_doc">О враче</h3>
+
+            <p id="doc-detail-bio" class="text-gray-500 text-sm leading-relaxed mb-6 bg-gray-50 p-4 rounded-2xl">...</p>
+
+            <h3 class="font-bold text-lg mb-3" data-key="schedule_label">График работы</h3>
+
+            <div class="space-y-2 mb-6" id="doc-detail-schedule">
+
+                <!-- Schedule injected -->
+
+            </div>
+
+        </div>
+
+        <div class="fixed bottom-0 w-full p-6 bg-white border-t border-gray-100 max-w-[480px]">
+
+            <button class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform" onclick="openBookingModal()" data-key="make_appointment">Записаться на приём</button>
+
+        </div>
+
+    </div>
+
+    <!-- ALL DOCTORS -->
+
+    <div id="screen-all-doctors" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" id="all-doctors-title" data-key="doctors_nearby">Все врачи</h1>
+
+        </div>
+
+        <div class="p-6 grid grid-cols-2 gap-4 overflow-y-auto pb-20" id="all-doctors-grid">
+
+             <!-- Injected via JS -->
+
+        </div>
+
+    </div>
+
+    <!-- VACCINATION -->
+
+    <div id="screen-vaccination" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="vaccination_calendar">Календарь вакцинации</h1>
+
+        </div>
+
+        <div class="p-6 overflow-y-auto pb-20" id="vaccine-list">
+
+            <!-- Injected -->
+
+        </div>
+
+    </div>
+
+    <!-- FAQ -->
+
+    <div id="screen-faq" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="faq_title">Часто задаваемые вопросы</h1>
+
+        </div>
+
+        <div class="p-6 overflow-y-auto pb-20 space-y-3" id="faq-list">
+
+            <!-- Injected -->
+
+        </div>
+
+    </div>
+
+    <!-- ANALYSES -->
+
+    <div id="screen-analyses" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+        <div class="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-white z-10 border-b border-gray-50">
+            <div class="flex items-center gap-3">
+                <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+                <h1 class="text-xl font-bold text-gray-900" data-key="analyses">Мои анализы</h1>
+            </div>
+            <button onclick="openAddAnalysisScreen()" class="flex items-center gap-1 text-primary text-sm font-bold bg-teal-50 px-3 py-2 rounded-xl hover:bg-teal-100 transition-colors">
+                <i class="fas fa-plus"></i> <span data-key="add_btn">Добавить</span>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto pb-20 space-y-6" id="analyses-list">
+            </div>
+    </div>
+
+<div id="screen-add-analysis" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-50 overflow-y-auto">
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+            <h1 class="text-xl font-bold text-gray-900" data-key="add_analysis_title">Добавить анализ</h1>
+        </div>
+        
+        <div class="p-6 flex-1 flex flex-col gap-5">
+            <div id="doctor-iin-field" class="hidden bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <label class="block text-sm font-bold text-blue-800 mb-2">ИИН пациента <span class="text-red-500">*</span></label>
+                <input type="text" id="analysis-patient-iin" oninput="this.value = this.value.replace(/[^0-9]/g, ''); validateAnalysisForm()" maxlength="12" placeholder="Например: 950321452470" class="w-full bg-white border border-blue-100 text-gray-900 text-sm font-bold rounded-xl p-4 focus:ring-1 focus:ring-blue-500 outline-none">
+                <p class="text-[10px] text-blue-600 mt-2 font-bold"><i class="fas fa-info-circle"></i> Результаты отправятся в профиль этого пациента</p>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2" data-key="analysis_type">Тип анализа</label>
+                <div class="relative">
+                    <select id="analysis-type-select" onchange="renderAnalysisFields()" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm font-bold rounded-2xl p-4 focus:ring-1 focus:ring-primary appearance-none outline-none">
+                        <option value="" disabled selected data-key="select_type">Выберите тип...</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
+            </div>
+            
+            <div id="analysis-dynamic-fields" class="space-y-4">
+                </div>
+        </div>
+
+        <div class="p-6 bg-white border-t border-gray-50 sticky bottom-0 max-w-[480px] w-full mx-auto">
+            <button id="save-analysis-btn" onclick="saveAnalysis()" class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-glow active:scale-95 transition-transform opacity-50 pointer-events-none flex justify-center items-center gap-2">
+                <i class="fas fa-check"></i> <span data-key="save_btn">Сохранить</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="toast-notification" class="fixed top-12 left-1/2 transform -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm text-white px-6 py-3 rounded-2xl shadow-2xl transition-all duration-300 opacity-0 -translate-y-10 pointer-events-none z-[100] flex items-center gap-3">
+        <i class="fas fa-check-circle text-green-400 text-lg"></i>
+        <span id="toast-message" class="text-sm font-bold tracking-wide">Успешно!</span>
+    </div>
+
+    <!-- SETTINGS -->
+
+    <div id="screen-settings" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="settings">Настройки</h1>
+
+        </div>
+
+        <div class="p-6 space-y-4">
+
+            <div class="flex justify-between items-center p-5 bg-gray-50 rounded-3xl">
+
+                <span class="font-bold text-gray-700" data-key="notifications">Уведомления</span>
+
+                <i class="fas fa-toggle-on text-primary text-3xl cursor-pointer" onclick="this.classList.toggle('fa-toggle-on'); this.classList.toggle('fa-toggle-off'); this.classList.toggle('text-primary'); this.classList.toggle('text-gray-300')"></i>
+
+            </div>
+
+            <div class="flex justify-between items-center p-5 bg-gray-50 rounded-3xl">
+
+                <span class="font-bold text-gray-700" data-key="dark_mode">Темная тема</span>
+
+                <i class="fas fa-toggle-off text-gray-300 text-3xl cursor-pointer" id="dark-theme-toggle" onclick="toggleDarkTheme()"></i>
+
+            </div>
+
+            <div class="flex justify-between items-center p-5 bg-gray-50 rounded-3xl">
+
+                <span class="font-bold text-gray-700" data-key="accessibility">Для слабовидящих</span>
+
+                <i class="fas fa-toggle-off text-gray-300 text-3xl cursor-pointer" id="accessibility-toggle" onclick="toggleAccessibility()"></i>
+
+            </div>
+
+            <div class="flex flex-col p-5 bg-gray-50 rounded-3xl gap-4">
+
+                <span class="font-bold text-gray-700" data-key="language">Язык</span>
+
+                <div class="flex gap-2">
+
+                    <button onclick="changeLanguage('ru')" class="flex-1 py-3 rounded-xl text-sm font-bold bg-white shadow-sm text-primary" id="btn-ru">Русский</button>
+
+                    <button onclick="changeLanguage('kk')" class="flex-1 py-3 rounded-xl text-sm font-bold text-gray-500" id="btn-kk">Қазақша</button>
+
+                </div>
+
+            </div>
+
+            <button onclick="goToScreen('privacy')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-[0.98] transition-all">
+
+                <span class="font-bold text-gray-700" data-key="privacy">Конфиденциальность</span><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- PRIVACY -->
+
+    <div id="screen-privacy" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="privacy">Конфиденциальность</h1>
+
+        </div>
+
+        <div class="p-6 space-y-4">
+
+            <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+
+                <h3 class="font-bold text-gray-800 mb-4" data-key="change_pass">Сменить пароль</h3>
+
+                <form onsubmit="handleChangePassword(event)" class="space-y-4">
+
+                    <div class="relative">
+
+                        <input type="password" id="old-pass" placeholder="Старый пароль" class="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl p-4 transition-all" required>
+
+                        <button type="button" onclick="togglePass('old-pass')" class="absolute right-4 top-4 text-gray-400"><i class="far fa-eye-slash"></i></button>
+
+                    </div>
+
+                    <div class="relative">
+
+                        <input type="password" id="new-pass" placeholder="Новый пароль" class="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl p-4 transition-all" required>
+
+                        <button type="button" onclick="togglePass('new-pass')" class="absolute right-4 top-4 text-gray-400"><i class="far fa-eye-slash"></i></button>
+
+                    </div>
+
+                    <div class="relative">
+
+                        <input type="password" id="confirm-pass" placeholder="Подтвердите пароль" class="w-full bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl p-4 transition-all" required>
+
+                        <button type="button" onclick="togglePass('confirm-pass')" class="absolute right-4 top-4 text-gray-400"><i class="far fa-eye-slash"></i></button>
+
+                    </div>
+
+                    <button type="submit" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-transform" data-key="save_btn">Сохранить</button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL: PHOTO -->
+
+    <div id="modal-photo" class="hidden absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onclick="if(event.target === this) togglePhotoModal()">
+
+        <div class="bg-white w-full max-w-[480px] p-6 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl">
+
+            <button onclick="openFullPhoto()" class="w-full py-4 border-b border-gray-100 font-bold text-gray-700 hover:text-primary" data-key="open_photo">Открыть фото</button>
+
+            <button onclick="document.getElementById('avatar-upload').click(); togglePhotoModal()" class="w-full py-4 border-b border-gray-100 font-bold text-gray-700 hover:text-primary" data-key="change_photo">Сменить фото</button>
+
+            <button onclick="togglePhotoModal()" class="w-full mt-4 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold" data-key="cancel">Отмена</button>
+
+        </div>
+
+    </div>
+
+    <!-- LIGHTBOX FOR PHOTO -->
+
+    <div id="lightbox-photo" class="hidden absolute inset-0 z-[60] bg-black flex items-center justify-center animate-fade-in" onclick="this.classList.add('hidden')">
+
+        <img id="lightbox-img" src="" class="max-w-full max-h-full object-contain">
+
+        <button class="absolute top-6 right-6 text-white text-3xl"><i class="fas fa-times"></i></button>
+
+    </div>
+
+    <!-- PAYMENTS, PERSONAL DATA, NOTIFICATIONS, CHAT, CITY MODAL -->
+
+    <div id="screen-payments" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="payment">Оплата</h1>
+
+        </div>
+
+        <div id="payments-list" class="p-6 flex-1 overflow-y-auto hidden"></div>
+
+        <div id="payments-empty" class="p-6 flex flex-col items-center justify-center flex-1 text-gray-400">
+
+            <i class="far fa-credit-card text-5xl mb-4 text-gray-200"></i><p data-key="no_cards">Нет карт</p>
+
+            <button onclick="addCard()" class="mt-6 bg-dark text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg" data-key="add_card">Добавить карту</button>
+
+        </div>
+
+    </div>
+
+    <div id="screen-personal-data" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-40 overflow-y-auto">
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+            <h1 class="text-xl font-bold text-gray-900" data-key="personal_data">Личные данные</h1>
+        </div>
+
+        <div class="p-6 flex-1 space-y-6">
+            <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <h3 class="font-bold text-gray-800 mb-4" data-key="basic_info">Основная информация</h3>
+                <div class="space-y-4 text-sm">
+                    <div class="flex justify-between items-center py-1">
+                        <span class="text-gray-500" data-key="lbl_name">Имя</span>
+                        <span class="font-bold" id="pd-name">...</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-1">
+                        <span class="text-gray-500">Email</span>
+                        <input type="email" id="pd-email-input" class="font-bold text-right bg-transparent border-b border-gray-200 focus:border-primary w-48 outline-none transition-colors pb-1">
+                    </div>
+
+                    <div class="flex justify-between items-center py-1">
+                        <span class="text-gray-500">ИИН</span>
+                        <input type="text" id="pd-iin" class="font-bold text-right bg-transparent w-32 cursor-default outline-none text-gray-500" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <h3 class="font-bold text-gray-800 mb-4" data-key="medical_info">Медицинские данные</h3>
+                <div class="space-y-4 text-sm">
+                    
+                    <div class="flex justify-between items-center py-1">
+                        <span class="text-gray-500" data-key="blood_type">Группа крови</span>
+                        <div class="relative">
+                            <select id="pd-blood-select" class="font-bold text-right bg-transparent outline-none cursor-pointer text-gray-900 pr-4 appearance-none">
+                                <option value="Неизвестно">Неизвестно</option>
+                                <option value="O(I) Rh+">O(I) Rh+</option>
+                                <option value="O(I) Rh-">O(I) Rh-</option>
+                                <option value="A(II) Rh+">A(II) Rh+</option>
+                                <option value="A(II) Rh-">A(II) Rh-</option>
+                                <option value="B(III) Rh+">B(III) Rh+</option>
+                                <option value="B(III) Rh-">B(III) Rh-</option>
+                                <option value="AB(IV) Rh+">AB(IV) Rh+</option>
+                                <option value="AB(IV) Rh-">AB(IV) Rh-</option>
+                            </select>
+                            <i class="fas fa-chevron-down absolute right-0 top-1/2 transform -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center py-1">
+                        <span class="text-gray-500" data-key="med_book">Мед. книжка</span>
+                        <span class="font-bold text-green-600 flex items-center gap-1"><i class="fas fa-check-circle"></i> <span data-key="active_status">Активна</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="savePersonalData()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform" data-key="save_btn">
+                Сохранить
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-notifications" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <div class="flex items-center gap-3"><button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button><h1 class="text-2xl font-bold text-gray-900" data-key="notifications">Уведомления</h1></div>
+
+            <button onclick="markAllRead()" class="text-primary text-sm font-bold" data-key="read_all">Прочитать все</button>
+
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-6 pb-6 space-y-3">
+
+            <div onclick="openNotifDetail(this)" class="p-4 bg-white border border-gray-100 rounded-3xl flex gap-4 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm">
+
+                <div class="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center flex-shrink-0 text-primary"><i class="far fa-calendar-check text-xl"></i></div>
+
+                <div><h3 class="font-bold text-gray-800 text-sm" data-key="notif_appt_title">Приём перенесён</h3><p class="text-xs text-gray-500 mt-1" data-key="click_details">Нажмите для деталей</p></div>
+
+                <div class="hidden detail-content"><h2 class="text-xl font-bold mb-2" data-key="notif_appt_title">Приём перенесён</h2><p data-key="notif_appt_body">Ваш приём к врачу Смиту перенесён на 15 декабря в 15:00.</p></div>
+
+            </div>
+
+             <div onclick="openNotifDetail(this)" class="p-4 bg-white border border-gray-100 rounded-3xl flex gap-4 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm">
+
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-500"><i class="fas fa-pills text-xl"></i></div>
+
+                <div><h3 class="font-bold text-gray-800 text-sm" data-key="notif_med_title">Время лекарств</h3><p class="text-xs text-gray-500 mt-1" data-key="click_details">Нажмите для деталей</p></div>
+
+                <div class="hidden detail-content"><h2 class="text-xl font-bold mb-2" data-key="notif_med_title">Время лекарств</h2><p data-key="notif_med_body">Не забудьте принять 50мг антибиотика после еды.</p></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="screen-notif-detail" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-50">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="closeNotifDetail()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="details">Детали</h1>
+
+        </div>
+
+        <div class="p-6" id="notif-detail-container"></div>
+
+    </div>
+
+    <!-- ALL CATEGORIES (EXPANDED) -->
+
+    <div id="screen-all-categories" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="popular_directions">Направления</h1>
+
+        </div>
+
+        <div class="p-6 grid grid-cols-2 gap-4 overflow-y-auto pb-20">
+
+             <div onclick="filterByCategory('Стоматолог')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-tooth text-2xl text-primary"></i><span class="font-bold text-sm" data-key="dentist">Стоматолог</span></div>
+
+             <div onclick="filterByCategory('Кардиолог')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-heartbeat text-2xl text-primary"></i><span class="font-bold text-sm" data-key="cardiologist">Кардиолог</span></div>
+
+             <div onclick="filterByCategory('Невролог')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-brain text-2xl text-primary"></i><span class="font-bold text-sm" data-key="neurologist">Невролог</span></div>
+
+             <div onclick="filterByCategory('Окулист')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-eye text-2xl text-primary"></i><span class="font-bold text-sm" data-key="ophthalmologist">Окулист</span></div>
+
+             <div onclick="filterByCategory('Хирург')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-bone text-2xl text-primary"></i><span class="font-bold text-sm" data-key="surgeon">Хирург</span></div>
+
+             <div onclick="filterByCategory('Педиатр')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-baby text-2xl text-primary"></i><span class="font-bold text-sm" data-key="pediatrician">Педиатр</span></div>
+
+             <div onclick="filterByCategory('Аллерголог')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-allergies text-2xl text-primary"></i><span class="font-bold text-sm" data-key="allergist">Аллерголог</span></div>
+
+             <div onclick="filterByCategory('Терапевт')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-user-md text-2xl text-primary"></i><span class="font-bold text-sm" data-key="therapist">Терапевт</span></div>
+
+             <div onclick="filterByCategory('Гинеколог')" class="p-4 bg-gray-50 rounded-2xl flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all"><i class="fas fa-female text-2xl text-primary"></i><span class="font-bold text-sm" data-key="gynecologist">Гинеколог</span></div>
+
+        </div>
+
+    </div>
+
+    <!-- MY APPOINTMENTS -->
+
+    <div id="screen-appointments" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-2 flex items-center gap-3 sticky top-0 bg-white z-10">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" data-key="my_appointments">Приёмы</h1>
+
+        </div>
+
+        <div class="px-6 mt-2 mb-4">
+
+            <div class="flex p-1 bg-gray-100 rounded-xl">
+
+                <button id="btn-appt-upcoming" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-primary font-bold text-sm transition-all" onclick="switchApptTab('upcoming')" data-key="upcoming">Предстоящие</button>
+
+                <button id="btn-appt-history" class="flex-1 py-2 rounded-lg text-gray-500 font-bold text-sm transition-all" onclick="switchApptTab('history')" data-key="history">История</button>
+
+            </div>
+
+        </div>
+
+        <div class="p-6 space-y-4 overflow-y-auto pb-20" id="appointments-list">
+
+             <!-- Injected via JS -->
+
+        </div>
+
+    </div>
+
+    <div id="screen-support-chat" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+
+            <h1 class="text-xl font-bold text-gray-900" id="chat-title" data-key="support_chat">Поддержка</h1>
+
+        </div>
+
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+
+            <div class="flex justify-start"><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%]">Здравствуйте! Чем могу помочь?</div></div>
+
+        </div>
+
+        <div class="p-4 bg-white border-t border-gray-100 flex gap-2">
+
+            <input type="text" id="chat-input" placeholder="Сообщение..." class="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-sm">
+
+            <button onclick="sendMessage()" class="bg-primary text-white w-12 h-12 rounded-xl flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
+
+        </div>
+
+    </div>
+
+    <!-- CITY MODAL -->
+
+    <div id="modal-city" class="hidden absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onclick="if(event.target===this)this.classList.add('hidden')">
+
+        <div class="bg-white w-full max-w-[480px] p-6 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl">
+
+            <h3 class="text-xl font-bold mb-4 text-center" data-key="choose_city">Выберите город</h3>
+
+            <div class="space-y-2">
+
+                <button onclick="selectCity('Астана')" class="w-full py-4 border-b border-gray-100 text-left font-bold text-gray-700 hover:text-primary">Астана</button>
+
+                <button onclick="selectCity('Алматы')" class="w-full py-4 border-b border-gray-100 text-left font-bold text-gray-700 hover:text-primary">Алматы</button>
+
+                <button onclick="selectCity('Шымкент')" class="w-full py-4 border-b border-gray-100 text-left font-bold text-gray-700 hover:text-primary">Шымкент</button>
+
+                <button onclick="selectCity('Актау')" class="w-full py-4 text-left font-bold text-gray-700 hover:text-primary">Актау</button>
+
+            </div>
+
+            <button onclick="document.getElementById('modal-city').classList.add('hidden')" class="w-full mt-4 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold" data-key="cancel">Отмена</button>
+
+        </div>
+
+    </div>
+
+    <!-- BOOKING MODAL -->
+
+    <div id="modal-booking" class="hidden absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onclick="if(event.target===this)closeBookingModal()">
+
+        <div class="bg-white w-full max-w-[480px] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl max-h-[90vh] overflow-y-auto">
+
+            <div class="sticky top-0 bg-white p-6 pb-4 border-b border-gray-100 rounded-t-[2rem] z-10">
+
+                <div class="flex justify-between items-center">
+
+                    <h3 class="text-xl font-bold text-gray-900" data-key="make_appointment_title">Запись на приём</h3>
+
+                    <button onclick="closeBookingModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+
+                        <i class="fas fa-times text-gray-400"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="p-6 space-y-6">
+
+                <!-- Doctor Info -->
+
+                <div class="flex gap-3 bg-gray-50 p-4 rounded-2xl">
+
+                    <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+
+                        <img id="booking-doc-img" src="" class="w-full h-full object-cover">
+
+                    </div>
+
+                    <div>
+
+                        <h4 id="booking-doc-name" class="font-bold text-gray-900">...</h4>
+
+                        <p id="booking-doc-spec" class="text-sm text-primary font-medium">...</p>
+
+                    </div>
+
+                </div>
+
+                <!-- Date Selection -->
+
+                <div>
+
+                    <h4 class="font-bold text-gray-800 mb-3" data-key="select_date">Выберите дату</h4>
+
+                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="booking-dates">
+
+                        <!-- Dates injected -->
+
+                    </div>
+
+                </div>
+
+                <!-- Time Selection -->
+
+                <div>
+
+                    <h4 class="font-bold text-gray-800 mb-3" data-key="select_time">Выберите время</h4>
+
+                    <div class="grid grid-cols-3 gap-2" id="booking-times">
+
+                        <!-- Times injected -->
+
+                    </div>
+
+                </div>
+
+                <!-- Appointment Type -->
+
+                <div>
+
+                    <h4 class="font-bold text-gray-800 mb-3" data-key="appt_type">Тип приёма</h4>
+
+                    <div class="space-y-2">
+
+                        <label class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition-colors">
+
+                            <input type="radio" name="appointment-type" value="clinic" checked class="w-5 h-5 text-primary">
+
+                            <div>
+
+                                <p class="font-bold text-sm text-gray-800" data-key="in_clinic">В клинике</p>
+
+                                <p class="text-xs text-gray-500" data-key="offline_visit">Очный приём</p>
+
+                            </div>
+
+                        </label>
+
+                        <label class="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition-colors">
+
+                            <input type="radio" name="appointment-type" value="online" class="w-5 h-5 text-primary">
+
+                            <div>
+
+                                <p class="font-bold text-sm text-gray-800" data-key="online">Онлайн</p>
+
+                                <p class="text-xs text-gray-500" data-key="video_consult">Видеоконсультация</p>
+
+                            </div>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+                <!-- Message to Doctor -->
+
+                <div>
+
+                    <h4 class="font-bold text-gray-800 mb-3" data-key="msg_to_doc">Сообщение врачу</h4>
+
+                    <textarea id="booking-msg" placeholder="Опишите симптомы или задайте вопрос..." class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-primary h-24 resize-none"></textarea>
+
+                </div>
+
+                <!-- Confirm Button -->
+
+                <button onclick="confirmBooking()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform" data-key="confirm_appt">
+
+                    Подтвердить запись
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+    // --- DATA ---
+
+    const doctors = [
+
+        // REQUESTED DOCTORS
+
+        { id: 1, name: "Медет П.", spec: "Невролог", exp: "8 лет", rating: 5.0, img: "https://i.ibb.co.com/7N07kbLB/IMG-7447.jpg", city: "Шымкент", bio: "Специалист высшей категории, эксперт в лечении мигрени." },
+
+        { id: 2, name: "Аманкос С.", spec: "Хирург", exp: "12 лет", rating: 4.9, img: "https://i.ibb.co.com/BVLsJd4X/IMG-7452.png", city: "Алматы", bio: "Проводит сложные операции, стажировался в Германии." },
+
+        { id: 3, name: "Тамерлан Б.", spec: "Стоматолог", exp: "9 лет", rating: 5.0, img: "https://i.ibb.co.com/5XWtDsf9/IMG-7450.jpg", city: "Астана", bio: "Эстетическая реставрация зубов любой сложности." },
+
+        { id: 4, name: "Жанболат Т.", spec: "Терапевт", exp: "15 лет", rating: 5.0, img: "https://i.ibb.co.com/kgCwHggC/IMG-7448.jpg", city: "Актау", bio: "Семейный врач с огромным опытом диагностики." },
+
+        { id: 5, name: "Даурен Н.", spec: "Кардиолог", exp: "7 лет", rating: 4.7, img: "https://i.ibb.co.com/NRqWHs8/Gemini-Generated-Image-rf7vv8rf7vv8rf7v.png", city: "Астана", bio: "Лечение аритмии и гипертонии." },
+
+        { id: 33, name: "Ернар К.", spec: "Окулист", exp: "10 лет", rating: 4.8, img: "https://i.ibb.co.com/Z1Tcj8TB/Whats-App-Image-2025-12-08-at-22-42-43.jpg", city: "Астана", bio: "Ведущий специалист клиники." },
+
+        // Dentist
+
+        { id: 6, name: "Алия Р.", spec: "Стоматолог", exp: "6 лет", rating: 4.7, img: "https://nnch.kz/wp-content/uploads/2020/05/erimova-scaled-e1732600614765.jpg", city: "Астана", bio: "Детская стоматология." },
+
+        { id: 7, name: "Кайрат М.", spec: "Стоматолог", exp: "10 лет", rating: 4.9, img: "https://files.medelement.com/uploads/co/738650821671811991/logo/70548331be91876f2ad2ade470e39017.jpg", city: "Алматы", bio: "Имплантология." },
+
+        { id: 8, name: "Елена С.", spec: "Стоматолог", exp: "4 года", rating: 4.5, img: "https://png.klev.club/uploads/posts/2024-03/png-klev-club-p-vrach-png-21.png", city: "Астана", bio: "Терапия и чистка." },
+
+        // Neurologist
+
+        { id: 9, name: "Ирина В.", spec: "Невролог", exp: "14 лет", rating: 5.0, img: "https://i.pravatar.cc/150?u=20", city: "Алматы", bio: "Лечение остеохондроза." },
+
+        { id: 10, name: "Арман К.", spec: "Невролог", exp: "9 лет", rating: 4.8, img: "https://i.pravatar.cc/150?u=21", city: "Астана", bio: "Реабилитация после инсульта." },
+
+        { id: 11, name: "София Л.", spec: "Невролог", exp: "5 лет", rating: 4.6, img: "https://i.pravatar.cc/150?u=22", city: "Шымкент", bio: "Головные боли." },
+
+        // Cardiologist
+
+        { id: 12, name: "Виктор П.", spec: "Кардиолог", exp: "20 лет", rating: 5.0, img: "https://i.pinimg.com/736x/58/ef/47/58ef47f88487be0b4373abde2ca87589.jpg", city: "Астана", bio: "Кардиохирургия." },
+
+        { id: 13, name: "Сауле А.", spec: "Кардиолог", exp: "11 лет", rating: 4.9, img: "https://rklinik.kz/upload/iblock/1c5/%D0%94%D0%B8%D0%B7%D0%B0%D0%B9%D0%BD%20%D0%B1%D0%B5%D0%B7%20%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D1%8F,%20%D0%BA%D0%BE%D0%BF%D0%B8%D1%8F,%20%D0%BA%D0%BE%D0%BF%D0%B8%D1%8F,%20%D0%BA%D0%BE%D0%BF%D0%B8%D1%8F%20(6).jpg", city: "Алматы", bio: "ЭКГ и УЗИ сердца." },
+
+        { id: 14, name: "Айгуль К.", spec: "Кардиолог", exp: "6 лет", rating: 4.7, img: "https://i.pravatar.cc/150?u=32", city: "Шымкент", bio: "Профилактика заболеваний." },
+
+        // Surgeon
+
+        { id: 15, name: "Болат Е.", spec: "Хирург", exp: "18 лет", rating: 5.0, img: "https://i.pravatar.cc/150?u=40", city: "Астана", bio: "Общая хирургия." },
+
+        { id: 16, name: "Дмитрий К.", spec: "Хирург", exp: "7 лет", rating: 4.6, img: "https://i.pravatar.cc/150?u=41", city: "Алматы", bio: "Травматология." },
+
+        { id: 17, name: "Айжан Т.", spec: "Хирург", exp: "9 лет", rating: 4.8, img: "https://i.pravatar.cc/150?u=42", city: "Актау", bio: "Пластическая хирургия." },
+
+        // Therapist
+
+        { id: 18, name: "Мария И.", spec: "Терапевт", exp: "25 лет", rating: 5.0, img: "https://i.pravatar.cc/150?u=50", city: "Астана", bio: "Заведующая отделением." },
+
+        { id: 19, name: "Олжас Н.", spec: "Терапевт", exp: "3 года", rating: 4.5, img: "https://i.pravatar.cc/150?u=51", city: "Алматы", bio: "Участковый врач." },
+
+        { id: 20, name: "Гульнара С.", spec: "Терапевт", exp: "12 лет", rating: 4.9, img: "https://i.pravatar.cc/150?u=52", city: "Шымкент", bio: "Общая практика." },
+
+        // Ophthalmologist
+
+        { id: 21, name: "Сергей Б.", spec: "Окулист", exp: "15 лет", rating: 5.0, img: "https://i.pravatar.cc/150?u=60", city: "Астана", bio: "Лазерная коррекция." },
+
+        { id: 22, name: "Асель К.", spec: "Окулист", exp: "8 лет", rating: 4.8, img: "https://i.pravatar.cc/150?u=61", city: "Алматы", bio: "Детский офтальмолог." },
+
+        { id: 23, name: "Тимур М.", spec: "Окулист", exp: "5 лет", rating: 4.6, img: "https://i.pravatar.cc/150?u=62", city: "Шымкент", bio: "Подбор очков." },
+
+        { id: 24, name: "Наталья В.", spec: "Окулист", exp: "10 лет", rating: 4.9, img: "https://i.pravatar.cc/150?u=63", city: "Астана", bio: "Лечение катаракты." },
+
+        // Pediatrician
+
+        { id: 25, name: "Анна П.", spec: "Педиатр", exp: "20 лет", rating: 5.0, img: "https://i.pravatar.cc/150?u=70", city: "Астана", bio: "Неонатолог." },
+
+        { id: 26, name: "Ержан С.", spec: "Педиатр", exp: "6 лет", rating: 4.7, img: "https://i.pravatar.cc/150?u=71", city: "Алматы", bio: "Вакцинация." },
+
+        { id: 27, name: "Светлана К.", spec: "Педиатр", exp: "12 лет", rating: 4.9, img: "https://i.pravatar.cc/150?u=72", city: "Шымкент", bio: "Лечение ОРВИ." },
+
+        { id: 28, name: "Азамат Т.", spec: "Педиатр", exp: "4 года", rating: 4.5, img: "https://i.pravatar.cc/150?u=73", city: "Актау", bio: "Педиатр общей практики." },
+
+        // Allergist
+
+        { id: 29, name: "Динара А.", spec: "Аллерголог", exp: "10 лет", rating: 5.0, img: "https://i.pravatar.cc/150?u=80", city: "Астана", bio: "Сезонная аллергия." },
+
+        { id: 30, name: "Павел Г.", spec: "Аллерголог", exp: "14 лет", rating: 4.9, img: "https://i.pravatar.cc/150?u=81", city: "Алматы", bio: "Иммунолог." },
+
+        { id: 31, name: "Мадина Е.", spec: "Аллерголог", exp: "7 лет", rating: 4.7, img: "https://i.pravatar.cc/150?u=82", city: "Шымкент", bio: "Пищевая аллергия." },
+
+        { id: 32, name: "Роман В.", spec: "Аллерголог", exp: "5 лет", rating: 4.6, img: "https://i.pravatar.cc/150?u=83", city: "Астана", bio: "Кожные пробы." },
+
+         // Gynecologist
+
+        { id: 34, name: "Елена Р.", spec: "Гинеколог", exp: "15 лет", rating: 4.9, img: "https://i.pravatar.cc/150?u=91", city: "Алматы", bio: "Репродуктолог." },
+
+        { id: 35, name: "Айгуль С.", spec: "Гинеколог", exp: "8 лет", rating: 4.8, img: "https://i.pravatar.cc/150?u=92", city: "Шымкент", bio: "Ведение беременности." },
+
+        { id: 36, name: "Ольга Т.", spec: "Гинеколог", exp: "12 лет", rating: 5.0, img: "https://i.pravatar.cc/150?u=93", city: "Астана", bio: "УЗИ малого таза." }
+
+    ];
+
+    const vaccinations = [
+
+        { age: "1-4 дня", vaccines: ["Гепатит В (1)", "БЦЖ"] },
+
+        { age: "2 месяца", vaccines: ["Гепатит В (2)", "Полиомиелит (1)", "АКДС (1)", "Гемофильная инфекция b (1)", "Пневмококк (1)"] },
+
+        { age: "3 месяца", vaccines: ["Полиомиелит (2)", "АКДС (2)", "Гемофильная инфекция b (2)"] },
+
+        { age: "4 месяца", vaccines: ["Гепатит В (3)", "Полиомиелит (3)", "АКДС (3)", "Гемофильная инфекция b (3)", "Пневмококк (2)"] },
+
+        { age: "12-15 месяцев", vaccines: ["Корь, краснуха, паротит (1)", "Пневмококк (3)", "Полиомиелит (4)"] },
+
+        { age: "6 лет (1 класс)", vaccines: ["БЦЖ (ревакцинация)", "АКДС (4)", "Корь, краснуха, паротит (2)"] }
+
+    ];
+
+    const faqs = [
+
+        { q: "Как записаться на прием?", a: "Перейдите в раздел 'Услуги' -> 'Записаться к врачу', выберите специалиста и удобное время." },
+
+        { q: "Как посмотреть результаты анализов?", a: "Результаты доступны в 'Профиле' -> 'Мои анализы'." },
+
+        { q: "Можно ли сменить врача?", a: "Да, вы можете выбрать любого доступного врача при записи." },
+
+        { q: "Что делать если забыл пароль?", a: "На экране входа нажмите 'Забыли пароль?' для восстановления." }
+
+    ];
+
+    // КОНФИГУРАЦИЯ ТИПОВ АНАЛИЗОВ И НОРМ
+    const analysisConfig = {
+        "Общий анализ крови": [
+            { id: "hemo", name: "Гемоглобин", unit: "г/л", min: 120, max: 160 },
+            { id: "leuko", name: "Лейкоциты", unit: "10⁹/л", min: 4.0, max: 9.0 },
+            { id: "trombo", name: "Тромбоциты", unit: "10⁹/л", min: 150, max: 400 }
+        ],
+        "Биохимия крови": [
+            { id: "protein", name: "Общий белок", unit: "г/л", min: 64, max: 83 },
+            { id: "glucose_bio", name: "Глюкоза", unit: "ммоль/л", min: 3.3, max: 5.5 },
+            { id: "cholesterol_bio", name: "Холестерин", unit: "ммоль/л", min: 3.6, max: 5.2 }
+        ],
+        "Общий анализ мочи": [
+            { id: "ph", name: "Кислотность (pH)", unit: "ед", min: 5.0, max: 7.0 },
+            { id: "density", name: "Удельный вес", unit: "г/л", min: 1010, max: 1025 }
+        ],
+        "Гормоны щитовидной железы": [
+            { id: "ttg", name: "ТТГ", unit: "мкМЕ/мл", min: 0.4, max: 4.0 },
+            { id: "t4_free", name: "Т4 свободный", unit: "пмоль/л", min: 9.0, max: 22.0 },
+            { id: "t3_free", name: "Т3 свободный", unit: "пмоль/л", min: 2.6, max: 5.7 }
+        ],
+        "Витамины и минералы": [
+            { id: "vit_d", name: "Витамин D", unit: "нг/мл", min: 30, max: 100 },
+            { id: "ferritin", name: "Ферритин", unit: "мкг/л", min: 10, max: 120 },
+            { id: "iron", name: "Сывороточное железо", unit: "мкмоль/л", min: 9.0, max: 30.4 },
+            { id: "calcium", name: "Кальций общий", unit: "ммоль/л", min: 2.15, max: 2.50 }
+        ],
+        "Печеночный профиль": [
+            { id: "alt", name: "АЛТ", unit: "Ед/л", min: 0, max: 41 },
+            { id: "ast", name: "АСТ", unit: "Ед/л", min: 0, max: 40 },
+            { id: "bilirubin", name: "Билирубин общий", unit: "мкмоль/л", min: 3.4, max: 20.5 }
+        ]
+    };
+
+    let myAnalysesList = []; // Будем загружать из localStorage
+
+    const translations = {
+
+        ru: {
+
+            login_title: "Войти", login_subtitle: "Приятно видеть вас снова!", create: "Создать", no_account: "Нету аккаунта?",
+
+            register_title: "Создать аккаунт", register_subtitle: "Добро пожаловать!", create_account: "Создать аккаунт", already_registered: "Уже зарегистрированы?",
+
+            popular_directions: "Популярные направления", all: "Все", upcoming_consultations: "Предстоящие консультации", doctors_nearby: "Врачи рядом",
+
+            services: "Услуги", make_appointment: "Записаться к врачу", my_appointments: "Мои приёмы", vaccination_calendar: "Календарь вакцинации", faq_title: "Часто задаваемые вопросы", support_chat: "Чат поддержки",
+
+            profile: "Профиль", personal_data: "Личные данные", settings: "Настройки", payment: "Оплата", logout: "Выйти",
+
+            notifications: "Уведомления", read_all: "Прочитать все",
+
+            analyses: "Мои анализы", privacy: "Конфиденциальность", change_pass: "Сменить пароль",
+
+            language: "Язык", open_photo: "Открыть фото", change_photo: "Сменить фото", cancel: "Отмена",
+
+            basic_info: "Основная информация", medical_info: "Медицинские данные",
+
+            lbl_name: "Имя", blood_type: "Группа крови", med_book: "Мед. книжка", card_added: "Карта успешно добавлена!",
+
+            dentist: "Стоматолог", pulmonologist: "Пульмонолог", cardiologist: "Кардиолог", neurologist: "Невролог", gynecologist: "Гинеколог", ophthalmologist: "Окулист", surgeon: "Хирург", pediatrician: "Педиатр", allergist: "Аллерголог", therapist: "Терапевт",
+
+            onboarding1_title: "Здоровье – без лишних хлопот", onboarding1_text: "Любой специалист – в пару кликов.",
+
+            onboarding2_title: "Всегда вместе с вами", onboarding2_text: "Анализы и рецепты под рукой.",
+
+            onboarding3_title: "Добро пожаловать!", onboarding3_text: "Начните заботу о здоровье сейчас.",
+
+            forgot_pass: "Забыли пароль?", forgot_subtitle: "Введите свою почту, чтобы сбросить пароль.", reset_pass: "Сбросить пароль",
+
+            next_btn: "Далее", save_btn: "Сохранить", dark_mode: "Темная тема", accessibility: "Для слабовидящих", active_status: "Активна",
+
+            no_cards: "Нет карт", add_card: "Добавить карту", upcoming: "Предстоящие", history: "История", empty: "Пусто", no_chats: "У вас пока нет активных чатов.", chats_title: "Чаты",
+
+            doc_info: "Информация о враче", exp_label: "Опыт", rating_label: "Рейтинг", city_label: "Город", about_doc: "О враче", schedule_label: "График работы",
+
+            make_appointment_title: "Запись на приём", select_date: "Выберите дату", select_time: "Выберите время", appt_type: "Тип приёма", in_clinic: "В клинике", offline_visit: "Очный приём", online: "Онлайн", video_consult: "Видеоконсультация", msg_to_doc: "Сообщение врачу", confirm_appt: "Подтвердить запись",
+
+            enter_call: "Войти в звонок", cancelled: "Отменён", cancel_appt: "Отменить", completed: "Завершен", notif_appt_title: "Приём перенесён", notif_appt_body: "Ваш приём к врачу Смиту перенесён на 15 декабря в 15:00.", notif_med_title: "Время лекарств", notif_med_body: "Не забудьте принять 50мг антибиотика после еды.", click_details: "Нажмите для деталей", details: "Детали", choose_city: "Выберите город",
+
+            chat_placeholder: "Сообщение...", search_placeholder: "Ищи врача, услугу...", add_btn: "Добавить", add_analysis_title: "Добавить анализ", analysis_type: "Тип анализа", select_type: "Выберите тип...", saved_success: "Анализ успешно сохранён", no_analyses: "Нет добавленных анализов", status_norm: "В норме", status_warn: "Отклонения", status_danger: "Критично",
+
+        },
+
+        kk: {
+
+            login_title: "Кіру", login_subtitle: "Сізді қайта көргенімізге қуаныштымыз!", create: "Жасау", no_account: "Аккаунт жоқ па?",
+
+            register_title: "Аккаунт жасау", register_subtitle: "Қош келдіңіз!", create_account: "Аккаунт жасау", already_registered: "Тіркелгенсіз бе?",
+
+            popular_directions: "Танымал бағыттар", all: "Барлығы", upcoming_consultations: "Алдағы консультациялар", doctors_nearby: "Жақын жердегі дәрігерлер",
+
+            services: "Қызметтер", make_appointment: "Дәрігерге жазылу", my_appointments: "Менің қабылдауларым", vaccination_calendar: "Вакцинация күнтізбесі", faq_title: "Жиі қойылатын сұрақтар", support_chat: "Қолдау чаты",
+
+            profile: "Профиль", personal_data: "Жеке деректер", settings: "Параметрлер", payment: "Төлем", logout: "Шығу",
+
+            notifications: "Хабарламалар", read_all: "Бәрін оқу",
+
+            analyses: "Менің талдауларым", privacy: "Құпиялылық", change_pass: "Құпия сөзді өзгерту",
+
+            language: "Тіл", open_photo: "Суретті ашу", change_photo: "Суретті өзгерту", cancel: "Болдырмау",
+
+            basic_info: "Негізгі ақпарат", medical_info: "Медициналық деректер",
+
+            lbl_name: "Аты", blood_type: "Қан тобы", med_book: "Мед. кітапша", card_added: "Карта сәтті қосылды!",
+
+            dentist: "Стоматолог", pulmonologist: "Пульмонолог", cardiologist: "Кардиолог", neurologist: "Невролог", gynecologist: "Гинеколог", ophthalmologist: "Окулист", surgeon: "Хирург", pediatrician: "Педиатр", allergist: "Аллерголог", therapist: "Терапевт",
+
+            onboarding1_title: "Денсаулық – артық уайымсыз", onboarding1_text: "Кез келген маман – екі рет басу арқылы.",
+
+            onboarding2_title: "Әрқашан сізбен бірге", onboarding2_text: "Талдаулар мен рецепттер қолжетімді.",
+
+            onboarding3_title: "Қош келдіңіз!", onboarding3_text: "Денсаулығыңызды қазір күтіңіз.",
+
+            forgot_pass: "Құпия сөзді ұмыттыңыз ба?", forgot_subtitle: "Құпия сөзді қалпына келтіру үшін поштаңызды енгізіңіз.", reset_pass: "Қалпына келтіру",
+
+            next_btn: "Келесі", save_btn: "Сақтау", dark_mode: "Қараңғы режим", accessibility: "Нашар көретіндер үшін", active_status: "Белсенді",
+
+            no_cards: "Карталар жоқ", add_card: "Карта қосу", upcoming: "Алдағы", history: "Тарих", empty: "Бос", no_chats: "Сізде әзірге белсенді чаттар жоқ.", chats_title: "Чаттар",
+
+            doc_info: "Дәрігер туралы", exp_label: "Тәжірибе", rating_label: "Рейтинг", city_label: "Қала", about_doc: "Дәрігер жайлы", schedule_label: "Жұмыс кестесі",
+
+            make_appointment_title: "Қабылдауға жазылу", select_date: "Күнді таңдаңыз", select_time: "Уақытты таңдаңыз", appt_type: "Қабылдау түрі", in_clinic: "Клиникада", offline_visit: "Офлайн қабылдау", online: "Онлайн", video_consult: "Бейнеконсультация", msg_to_doc: "Дәрігерге хабарлама", confirm_appt: "Жазылуды растау",
+
+            enter_call: "Қоңырауға кіру", cancelled: "Болдырылмады", cancel_appt: "Болдырмау", completed: "Аяқталды", notif_appt_title: "Қабылдау ауыстырылды", notif_appt_body: "Дәрігер Смитке қабылдауыңыз 15 желтоқсан сағат 15:00-ге ауыстырылды.", notif_med_title: "Дәрі қабылдау уақыты", notif_med_body: "Тамақтан кейін 50мг антибиотик қабылдауды ұмытпаңыз.", click_details: "Толығырақ көру үшін басыңыз", details: "Мәліметтер", choose_city: "Қаланы таңдаңыз",
+
+            chat_placeholder: "Хабарлама...", search_placeholder: "Дәрігерді, қызметті іздеу...", add_btn: "Қосу", add_analysis_title: "Талдау қосу", analysis_type: "Талдау түрі", select_type: "Түрді таңдаңыз...", saved_success: "Талдау сәтті сақталды", no_analyses: "Қосылған талдаулар жоқ", status_norm: "Қалыпты", status_warn: "Ауытқулар", status_danger: "Критикалық",
+
+        }
+
+    };
+
+    let currentUser = null;
+
+    let currentCity = "Астана";
+
+    let currentLang = "ru";
+
+    let currentStep = 0;
+
+    // NAVIGATION STACK
+
+    let navHistory = [];
+
+    // APPOINTMENTS DATA (Mock Database)
+
+    let myAppointments = [
+
+        { id: 101, doctorId: 5, date: "2025-11-12", time: "12:00", type: "Онлайн", status: "upcoming" }
+
+    ];
+
+    // CHATS DATA
+
+    let myChats = [
+
+        // { id: 1, doctorId: 5, lastMsg: "Здравствуйте, жду на приеме." }
+
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        loadUserState();
+
+        loadThemeSettings();
+
+        renderDoctors();
+
+        renderVaccinations();
+
+        renderFAQ();
+
+        initAnalyses();
+
+        renderChats();
+
+        switchApptTab('upcoming'); // Init appointment tabs
+
+    });
+
+    function renderDoctors() {
+
+        const homeGrid = document.getElementById('doctors-home-grid');
+
+        const allGrid = document.getElementById('all-doctors-grid');
+
+        const createCard = (doc) => `
+
+            <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl shadow-card border border-gray-100 flex flex-col items-center relative cursor-pointer active:scale-95 transition-transform">
+
+                <div class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg shadow-sm border border-gray-100"><i class="fas fa-star text-yellow-400 text-[10px]"></i><span class="text-[10px] font-bold">${doc.rating}</span></div>
+
+                <div class="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md"><img src="${doc.img}" class="w-full h-full object-cover"></div>
+
+                <h3 class="font-bold text-sm text-gray-800 text-center">${doc.name}</h3>
+
+                <p class="text-[11px] text-gray-400 mb-4" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
+
+                <button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-teal-700 transition-colors"><i class="fas fa-arrow-right text-sm -rotate-45"></i></button>
+
+            </div>`;
+
+        const nearbyIds = [1, 2, 3, 4, 5, 33];
+
+        const nearbyDoctors = doctors.filter(d => nearbyIds.includes(d.id));
+
+        if(homeGrid) homeGrid.innerHTML = nearbyDoctors.map(createCard).join('');
+
+        if(allGrid) allGrid.innerHTML = doctors.map(createCard).join('');
+
+        // Re-apply translations after render
+
+        changeLanguage(currentLang);
+
+    }
+
+    function getKeyForSpec(spec) {
+
+        // Map spec to translation key
+
+        if(spec === "Стоматолог") return "dentist";
+
+        if(spec === "Невролог") return "neurologist";
+
+        if(spec === "Кардиолог") return "cardiologist";
+
+        if(spec === "Окулист") return "ophthalmologist";
+
+        if(spec === "Хирург") return "surgeon";
+
+        if(spec === "Педиатр") return "pediatrician";
+
+        if(spec === "Аллерголог") return "allergist";
+
+        if(spec === "Терапевт") return "therapist";
+
+        if(spec === "Гинеколог") return "gynecologist";
+
+        return "dentist"; // fallback
+
+    }
+
+    // ... (renderVaccinations, renderFAQ, renderAnalyses same as before) ...
+
+    function renderVaccinations() {
+
+        const list = document.getElementById('vaccine-list');
+
+        if(!list) return;
+
+        list.innerHTML = vaccinations.map(v => `
+
+            <div class="bg-blue-50 p-5 rounded-3xl border border-blue-100 mb-4 shadow-sm">
+
+                <h3 class="font-bold text-blue-700 mb-2">${v.age}</h3>
+
+                <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">${v.vaccines.map(vac => `<li>${vac}</li>`).join('')}</ul>
+
+            </div>`).join('');
+
+    }
+
+    function renderFAQ() {
+
+        const list = document.getElementById('faq-list');
+
+        if(!list) return;
+
+        list.innerHTML = faqs.map((f) => `
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 cursor-pointer" onclick="toggleFAQ(this)">
+
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-800 text-sm">${f.q}</span><i class="fas fa-chevron-down text-gray-400 faq-icon"></i></div>
+
+                <div class="faq-answer text-sm text-gray-500 mt-0"><p class="pt-3">${f.a}</p></div>
+
+            </div>`).join('');
+
+    }
+
+    function toggleFAQ(el) {
+
+        const answer = el.querySelector('.faq-answer');
+
+        const icon = el.querySelector('.faq-icon');
+
+        const isOpen = answer.style.maxHeight;
+
+        document.querySelectorAll('.faq-answer').forEach(a => a.style.maxHeight = null);
+
+        document.querySelectorAll('.faq-icon').forEach(i => i.classList.remove('rotate-180'));
+
+        if (!isOpen) { answer.style.maxHeight = answer.scrollHeight + "px"; icon.classList.add('rotate-180'); }
+
+    }
+
+    function initAnalyses() {
+        const saved = localStorage.getItem('qamqorAnalyses');
+        if (saved) {
+            myAnalysesList = JSON.parse(saved);
+        } else {
+            // Демо данные, если пусто
+            myAnalysesList = [
+                { id: 1, type: "Общий анализ крови", date: "23.02.2026", overallStatus: "normal", results: [ { name: "Гемоглобин", value: 130, min: 120, max: 160, unit: "г/л", status: "normal" } ] }
+            ];
+        }
+        
+        // Заполняем селект типами анализов
+        const select = document.getElementById('analysis-type-select');
+        Object.keys(analysisConfig).forEach(type => {
+            select.innerHTML += `<option value="${type}">${type}</option>`;
+        });
+        
+        renderAnalyses();
+    }
+
+    // ВЫЗОВИ initAnalyses() внутри document.addEventListener('DOMContentLoaded', ...) вместо renderAnalyses()!
+
+    function renderAnalyses() {
+        const list = document.getElementById('analyses-list');
+        if(!list) return;
+
+        // 1. Загружаем все анализы (Глобальная база)
+        const saved = localStorage.getItem('qamqorAnalyses');
+        let globalAnalyses = saved ? JSON.parse(saved) : [];
+        
+        // 2. Ищем ИИН текущего пациента
+        const userIIN = currentUser ? (currentUser.iin || "070226550487") : "070226550487";
+        
+        // 3. Фильтруем: показываем пациенту только ЕГО анализы
+        myAnalysesList = globalAnalyses.filter(a => a.patientIIN === userIIN || !a.patientIIN);
+
+        if (myAnalysesList.length === 0) {
+            list.innerHTML = `<div class="flex flex-col items-center justify-center h-48 text-gray-400 mt-10"><div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3"><i class="fas fa-microscope text-2xl text-gray-300"></i></div><p data-key="no_analyses" class="font-bold text-gray-500">Нет добавленных анализов</p></div>`;
+            if (typeof changeLanguage === 'function') changeLanguage(currentLang);
+            return;
+        }
+
+        list.innerHTML = myAnalysesList.map(a => {
+            let badgeStyle = a.overallStatus === 'normal' ? 'bg-green-50 text-green-600 border-green-200' : (a.overallStatus === 'warning' ? 'bg-yellow-50 text-yellow-600 border-yellow-200' : 'bg-red-50 text-red-600 border-red-200');
+            let badgeKey = a.overallStatus === 'normal' ? 'status_norm' : (a.overallStatus === 'warning' ? 'status_warn' : 'status_danger');
+            let iconColor = a.overallStatus === 'normal' ? 'text-green-500' : (a.overallStatus === 'warning' ? 'text-yellow-500' : 'text-red-500');
+
+            let resultsHtml = a.results.map(r => {
+                let rColor = r.status === 'normal' ? 'text-gray-900' : (r.status === 'warning' ? 'text-yellow-600' : 'text-red-600');
+                let rIcon = r.status === 'normal' ? '<i class="fas fa-check text-green-500 text-[10px]"></i>' : (r.status === 'warning' ? '<i class="fas fa-exclamation text-yellow-500 text-[10px]"></i>' : '<i class="fas fa-arrow-down text-red-500 text-[10px]"></i>');
+                if (r.status !== 'normal' && r.value > r.max) rIcon = '<i class="fas fa-arrow-up text-red-500 text-[10px]"></i>';
+
+                return `
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100/50 last:border-0">
+                        <div>
+                            <p class="text-sm font-bold text-gray-700">${r.name}</p>
+                            <p class="text-[10px] text-gray-400">Норма: ${r.min} - ${r.max}</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-gray-50">
+                            <span class="text-sm font-bold ${rColor}">${r.value} <span class="text-xs font-normal text-gray-400">${r.unit}</span></span>
+                            ${rIcon}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Плашка "От врача", если анализ добавил доктор
+            let doctorBadge = a.doctorId ? `<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-lg ml-2 font-bold border border-blue-100"><i class="fas fa-user-md"></i> От врача</span>` : '';
+
+            return `
+            <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 mb-4 transition-all hover:shadow-md">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500"><i class="fas fa-file-medical-alt"></i></div>
+                        <div>
+                            <h3 class="font-bold text-gray-900 text-sm flex items-center">${a.type} ${doctorBadge}</h3>
+                            <p class="text-xs text-gray-400">${a.date}</p>
+                        </div>
+                    </div>
+                    <span class="${badgeStyle} border text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm" data-key="${badgeKey}">
+                        <i class="fas fa-circle text-[8px] ${iconColor} animate-pulse"></i> ${translations[currentLang][badgeKey] || (a.overallStatus==='normal'?'В норме':a.overallStatus==='warning'?'Отклонения':'Критично')}
+                    </span>
+                </div>
+                <div class="bg-gray-50/50 rounded-2xl p-4 border border-gray-50">
+                    ${resultsHtml}
+                </div>
+            </div>`;
+        }).join('');
+        
+        if (typeof changeLanguage === 'function') changeLanguage(currentLang);
+    }
+
+    // Открытие для Пациента
+    function openAddAnalysisScreen() {
+        document.getElementById('doctor-iin-field').classList.add('hidden'); 
+        document.getElementById('analysis-patient-iin').value = "";
+        
+        document.getElementById('analysis-type-select').value = "";
+        document.getElementById('analysis-dynamic-fields').innerHTML = "";
+        validateAnalysisForm();
+        goToScreen('add-analysis');
+    }
+
+    // Открытие для Врача
+    function openDoctorAddAnalysis() {
+        document.getElementById('doctor-iin-field').classList.remove('hidden'); 
+        document.getElementById('analysis-patient-iin').value = "";
+        
+        document.getElementById('analysis-type-select').value = "";
+        document.getElementById('analysis-dynamic-fields').innerHTML = "";
+        validateAnalysisForm();
+        goToScreen('add-analysis');
+    }
+
+    function renderAnalysisFields() {
+        const type = document.getElementById('analysis-type-select').value;
+        const container = document.getElementById('analysis-dynamic-fields');
+        if(!type || !analysisConfig[type]) return;
+
+        const fields = analysisConfig[type];
+        container.innerHTML = fields.map(f => `
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 transition-all focus-within:border-primary focus-within:bg-primary/5">
+                <div class="flex justify-between items-end mb-3">
+                    <label class="text-sm font-bold text-gray-800">${f.name}</label>
+                    <span class="text-[10px] text-gray-500 font-bold bg-white px-2 py-1 rounded-lg shadow-sm border border-gray-100">Норма: ${f.min} - ${f.max} ${f.unit}</span>
+                </div>
+                <div class="relative">
+                    <input type="number" step="0.1" id="input-${f.id}" oninput="validateAnalysisForm()" placeholder="0.0" class="w-full bg-white border border-gray-100 text-gray-900 font-bold text-lg rounded-xl p-4 pr-12 focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm">
+                    <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs font-bold">${f.unit}</span>
+                </div>
+            </div>
+        `).join('');
+        validateAnalysisForm();
+    }
+
+    function validateAnalysisForm() {
+        const type = document.getElementById('analysis-type-select').value;
+        const btn = document.getElementById('save-analysis-btn');
+        
+        const isDoctor = currentUser && currentUser.role === 'doctor';
+        const iinInput = document.getElementById('analysis-patient-iin').value;
+        
+        // Врач обязан ввести 12 цифр ИИН
+        if (isDoctor && (!iinInput || iinInput.length !== 12)) {
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            return;
+        }
+
+        if(!type) {
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            return;
+        }
+
+        const fields = analysisConfig[type];
+        let isValid = true;
+        fields.forEach(f => {
+            const input = document.getElementById(`input-${f.id}`);
+            if(!input || input.value.trim() === "" || parseFloat(input.value) <= 0) {
+                isValid = false;
+            }
+        });
+
+        if(isValid) {
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            btn.classList.add('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    function saveAnalysis() {
+        const type = document.getElementById('analysis-type-select').value;
+        const fields = analysisConfig[type];
+        let results = [];
+        let hasWarning = false;
+        let hasDanger = false;
+
+        fields.forEach(f => {
+            const val = parseFloat(document.getElementById(`input-${f.id}`).value);
+            let status = 'normal';
+            const range = f.max - f.min;
+            const criticalOffset = range * 0.25;
+
+            if (val < f.min) {
+                status = (val < f.min - criticalOffset) ? 'danger' : 'warning';
+                hasWarning = true;
+                if(status === 'danger') hasDanger = true;
+            } else if (val > f.max) {
+                status = (val > f.max + criticalOffset) ? 'danger' : 'warning';
+                hasWarning = true;
+                if(status === 'danger') hasDanger = true;
+            }
+            results.push({ name: f.name, value: val, min: f.min, max: f.max, unit: f.unit, status: status });
+        });
+
+        const overallStatus = hasDanger ? 'danger' : (hasWarning ? 'warning' : 'normal');
+        const today = new Date();
+        const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth()+1).padStart(2, '0')}.${today.getFullYear()}`;
+
+        // 🎯 МАГИЯ ЗДЕСЬ: Определяем, кому сохраняем анализ
+        const isDoctor = currentUser && currentUser.role === 'doctor';
+        const targetIIN = isDoctor ? document.getElementById('analysis-patient-iin').value : (currentUser.iin || "070226550487");
+
+        const newAnalysis = { 
+            id: Date.now(), 
+            type: type, 
+            date: dateStr, 
+            results: results, 
+            overallStatus: overallStatus,
+            patientIIN: targetIIN, // Привязываем к ИИН!
+            doctorId: isDoctor ? currentUser.email : null // Если отправил врач - ставим метку
+        };
+
+        // Загружаем глобальную базу и сохраняем туда
+        let globalAnalyses = JSON.parse(localStorage.getItem('qamqorAnalyses')) || [];
+        globalAnalyses.unshift(newAnalysis); 
+        localStorage.setItem('qamqorAnalyses', JSON.stringify(globalAnalyses));
+        
+        if (typeof showToast === 'function') showToast(translations[currentLang].saved_success || "Успешно!");
+        
+        // Разная логика возврата
+        if (isDoctor) {
+            goBack(); // Врача возвращаем на рабочий стол
+        } else {
+            renderAnalyses(); // Пациенту обновляем список
+            goBack();
+        }
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast-notification');
+        document.getElementById('toast-message').innerText = msg;
+        toast.classList.remove('opacity-0', '-translate-y-10', 'pointer-events-none');
+        
+        setTimeout(() => {
+            toast.classList.add('opacity-0', '-translate-y-10', 'pointer-events-none');
+        }, 3000);
+    }
+
+    let currentDoctorId = null;
+
+    function openDoctorDetail(id) {
+
+        currentDoctorId = id;
+
+        const doc = doctors.find(d => d.id === id);
+
+        if(!doc) return;
+
+        document.getElementById('doc-detail-name').innerText = doc.name;
+
+        document.getElementById('doc-detail-spec').innerText = doc.spec;
+
+        document.getElementById('doc-detail-spec').setAttribute('data-key', getKeyForSpec(doc.spec));
+
+        document.getElementById('doc-detail-img').src = doc.img;
+
+        document.getElementById('doc-detail-city').innerText = doc.city;
+
+        document.getElementById('doc-detail-exp').innerText = doc.exp;
+
+        document.getElementById('doc-detail-exp-mini').innerText = doc.exp;
+
+        document.getElementById('doc-detail-rate').innerHTML = `<i class="fas fa-star"></i> ${doc.rating}`;
+
+        document.getElementById('doc-detail-rate-mini').innerText = doc.rating;
+
+        document.getElementById('doc-detail-bio').innerText = doc.bio;
+
+        const schedule = ['Пн: 09:00 - 17:00', 'Вт: 09:00 - 17:00', 'Ср: 09:00 - 17:00', 'Чт: 09:00 - 14:00', 'Пт: 10:00 - 16:00'];
+
+        document.getElementById('doc-detail-schedule').innerHTML = schedule.map(s => `<div class="bg-gray-50 p-3 rounded-xl text-sm text-gray-600 font-medium">${s}</div>`).join('');
+
+        goToScreen('doctor-detail');
+
+        changeLanguage(currentLang); // Re-apply lang for dynamic content
+
+    }
+
+    function openBookingModal() {
+
+        if(!currentDoctorId) return;
+
+        const doc = doctors.find(d => d.id === currentDoctorId);
+
+        if(!doc) return;
+
+        document.getElementById('booking-doc-name').innerText = doc.name;
+
+        document.getElementById('booking-doc-spec').innerText = doc.spec;
+
+        document.getElementById('booking-doc-spec').setAttribute('data-key', getKeyForSpec(doc.spec));
+
+        document.getElementById('booking-doc-img').src = doc.img;
+
+        // Clear message
+
+        document.getElementById('booking-msg').value = '';
+
+        // Generate dates (next 7 days)
+
+        const dates = [];
+
+        const today = new Date();
+
+        const daysRu = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+        const monthsRu = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+
+        for(let i = 0; i < 7; i++) {
+
+            const date = new Date(today);
+
+            date.setDate(today.getDate() + i);
+
+            const dayName = i === 0 ? 'Сегодня' : (i === 1 ? 'Завтра' : daysRu[date.getDay()]);
+
+            const dateStr = `${date.getDate()} ${monthsRu[date.getMonth()]}`;
+
+            dates.push({ dayName, dateStr, fullDate: date.toISOString().split('T')[0] });
+
+        }
+
+        document.getElementById('booking-dates').innerHTML = dates.map((d, i) => `
+
+            <div onclick="selectBookingDate(this, '${d.fullDate}')" class="flex-shrink-0 p-3 px-4 rounded-2xl border-2 ${i === 0 ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white'} cursor-pointer hover:border-primary transition-all text-center min-w-[90px]">
+
+                <p class="text-xs font-bold ${i === 0 ? 'text-primary' : 'text-gray-500'}">${d.dayName}</p>
+
+                <p class="text-sm font-bold ${i === 0 ? 'text-primary' : 'text-gray-800'} mt-1">${d.dateStr}</p>
+
+            </div>
+
+        `).join('');
+
+        // Generate time slots
+
+        const times = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+
+        document.getElementById('booking-times').innerHTML = times.map((t, i) => `
+
+            <button onclick="selectBookingTime(this)" class="p-3 rounded-xl border-2 ${i === 0 ? 'border-primary bg-primary/5 text-primary' : 'border-gray-200 bg-white text-gray-700'} font-bold text-sm hover:border-primary hover:bg-primary/5 hover:text-primary transition-all">
+
+                ${t}
+
+            </button>
+
+        `).join('');
+
+        document.getElementById('modal-booking').classList.remove('hidden');
+
+        changeLanguage(currentLang);
+
+    }
+
+    function closeBookingModal() {
+
+        document.getElementById('modal-booking').classList.add('hidden');
+
+    }
+
+    function selectBookingDate(el, date) {
+
+        document.querySelectorAll('#booking-dates > div').forEach(d => {
+
+            d.classList.remove('border-primary', 'bg-primary/5');
+
+            d.classList.add('border-gray-200', 'bg-white');
+
+            d.querySelectorAll('p').forEach(p => p.classList.remove('text-primary'));
+
+            d.querySelectorAll('p')[0].classList.add('text-gray-500');
+
+            d.querySelectorAll('p')[1].classList.add('text-gray-800');
+
+        });
+
+        el.classList.remove('border-gray-200', 'bg-white');
+
+        el.classList.add('border-primary', 'bg-primary/5');
+
+        el.querySelectorAll('p').forEach(p => {
+
+            p.classList.remove('text-gray-500', 'text-gray-800');
+
+            p.classList.add('text-primary');
+
+        });
+
+        el.dataset.selectedDate = date; // Store selected date
+
+    }
+
+    function selectBookingTime(el) {
+
+        document.querySelectorAll('#booking-times button').forEach(b => {
+
+            b.classList.remove('border-primary', 'bg-primary/5', 'text-primary');
+
+            b.classList.add('border-gray-200', 'bg-white', 'text-gray-700');
+
+        });
+
+        el.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+
+        el.classList.add('border-primary', 'bg-primary/5', 'text-primary');
+
+    }
+
+    // CONFIRM BOOKING & SAVE
+
+    function confirmBooking() {
+
+        const selectedDateEl = document.querySelector('#booking-dates .border-primary');
+
+        const selectedTimeEl = document.querySelector('#booking-times .border-primary');
+
+        if(!selectedDateEl || !selectedTimeEl) {
+
+            alert('Пожалуйста, выберите дату и время');
+
+            return;
+
+        }
+
+        const dateOnClick = selectedDateEl.getAttribute('onclick'); 
+
+        const rawDate = dateOnClick.match(/'(\d{4}-\d{2}-\d{2})'/)[1]; 
+
+        const time = selectedTimeEl.innerText;
+
+        const appointmentType = document.querySelector('input[name="appointment-type"]:checked')?.value;
+
+        const typeText = appointmentType === 'online' ? 'Онлайн' : 'В клинике';
+
+        const message = document.getElementById('booking-msg').value;
+
+        // Create Chat if message exists
+
+        if (message.trim().length > 0) {
+
+            const existingChat = myChats.find(c => c.doctorId === currentDoctorId);
+
+            if (!existingChat) {
+
+                myChats.push({
+
+                    id: Date.now(),
+
+                    doctorId: currentDoctorId,
+
+                    lastMsg: message
+
+                });
+
+            } else {
+
+                existingChat.lastMsg = message;
+
+            }
+
+            renderChats(); // Update chats UI
+
+        }
+
+        // Add to Mock Database
+
+        myAppointments.push({
+
+            id: Date.now(),
+
+            doctorId: currentDoctorId,
+
+            date: rawDate,
+
+            time: time,
+
+            type: typeText,
+
+            status: 'upcoming'
+
+        });
+
+        alert(`✅ Запись подтверждена!\n\nДата: ${rawDate}\nВремя: ${time}\nТип: ${typeText}`);
+
+        closeBookingModal();
+
+        switchApptTab('upcoming'); // Refresh list
+
+        goToScreen('appointments', true, true); 
+
+    }
+
+    function cancelAppointment(id) {
+
+        const apptIndex = myAppointments.findIndex(a => a.id === id);
+
+        if (apptIndex > -1) {
+
+            myAppointments[apptIndex].status = 'cancelled';
+
+            alert('Запись отменена.');
+
+            switchApptTab('upcoming'); // Refresh view
+
+        }
+
+    }
+
+    // RENDER APPOINTMENTS
+
+    function switchApptTab(tab) {
+
+        const btnUpcoming = document.getElementById('btn-appt-upcoming');
+
+        const btnHistory = document.getElementById('btn-appt-history');
+
+        if(tab === 'upcoming') {
+
+            btnUpcoming.className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-primary font-bold text-sm transition-all";
+
+            btnHistory.className = "flex-1 py-2 rounded-lg text-gray-500 font-bold text-sm transition-all";
+
+        } else {
+
+            btnHistory.className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-primary font-bold text-sm transition-all";
+
+            btnUpcoming.className = "flex-1 py-2 rounded-lg text-gray-500 font-bold text-sm transition-all";
+
+        }
+
+        const listContainer = document.getElementById('appointments-list');
+
+        const today = new Date().toISOString().split('T')[0];
+
+        let filtered = [];
+
+        if (tab === 'upcoming') {
+
+            filtered = myAppointments.filter(a => a.date >= today && a.status !== 'cancelled' && a.status !== 'completed');
+
+        } else {
+
+            // History: past dates OR cancelled OR completed
+
+            filtered = myAppointments.filter(a => a.date < today || a.status === 'cancelled' || a.status === 'completed');
+
+        }
+
+        if (filtered.length === 0) {
+
+            listContainer.innerHTML = `<div class="flex flex-col items-center justify-center h-48 text-gray-400"><i class="far fa-calendar-times text-4xl mb-3"></i><p data-key="empty">Пусто</p></div>`;
+
+            changeLanguage(currentLang);
+
+            return;
+
+        }
+
+        listContainer.innerHTML = filtered.map(appt => {
+
+            const doc = doctors.find(d => d.id === appt.doctorId) || { name: "Неизвестный врач", spec: "Специалист", img: "https://i.pravatar.cc/150" };
+
+            const isOnline = appt.type === 'Онлайн';
+
+            // Dynamic Buttons based on tab and status
+
+            let actionButtons = '';
+
+            let statusBadge = '';
+
+            if (tab === 'upcoming') {
+
+                const btnAction = isOnline 
+
+                    ? `<button class="flex-1 bg-primary text-white py-3 rounded-xl font-bold shadow-sm active:scale-95 transition-transform" data-key="enter_call">Войти в звонок</button>` 
+
+                    : `<button class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold shadow-sm" disabled data-key="in_clinic">В клинике</button>`;
+
+                const btnCancel = `<button onclick="cancelAppointment(${appt.id})" class="w-12 flex items-center justify-center bg-red-50 text-red-500 rounded-xl font-bold shadow-sm active:scale-95 transition-transform"><i class="fas fa-times"></i></button>`;
+
+                actionButtons = `<div class="flex gap-2">${btnAction}${btnCancel}</div>`;
+
+            } else {
+
+                // History
+
+                if (appt.status === 'cancelled') {
+
+                    statusBadge = `<div class="text-center text-sm text-red-500 font-bold bg-red-50 py-2 rounded-xl" data-key="cancelled">Отменён</div>`;
+
+                } else {
+
+                    statusBadge = `<div class="text-center text-sm text-gray-400 font-bold bg-gray-50 py-2 rounded-xl" data-key="completed">Завершен</div>`;
+
+                }
+
+            }
+
+            return `
+
+            <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative">
+
+                <div class="flex justify-between mb-3">
+
+                    <span class="font-bold text-primary text-sm flex items-center gap-2"><i class="far fa-calendar-alt"></i> ${appt.date}, ${appt.time}</span>
+
+                    <span class="bg-gray-50 text-xs px-2 py-1 rounded-lg text-gray-600 font-bold shadow-sm border border-gray-100">${appt.type === 'Онлайн' ? 'Online' : 'Offline'}</span>
+
+                </div>
+
+                <div class="flex gap-4 mb-4">
+
+                    <div class="w-12 h-12 rounded-xl overflow-hidden"><img src="${doc.img}" class="w-full h-full object-cover"></div>
+
+                    <div>
+
+                        <h3 class="font-bold text-lg text-gray-900 leading-tight">${doc.name}</h3>
+
+                        <p class="text-sm text-gray-500" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
+
+                    </div>
+
+                </div>
+
+                ${tab === 'upcoming' ? actionButtons : statusBadge}
+
+            </div>`;
+
+        }).join('');
+
+        changeLanguage(currentLang);
+
+    }
+
+    function renderChats() {
+
+        const list = document.getElementById('chats-list');
+
+        const empty = document.getElementById('chats-empty');
+
+        // Add Support Chat as the first fixed chat
+
+        let html = `
+
+        <div onclick="goToScreen('support-chat')" class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors">
+
+            <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-primary"><i class="fas fa-headset text-xl"></i></div>
+
+            <div class="flex-1">
+
+                <h3 class="font-bold text-gray-900" data-key="support_chat">Поддержка</h3>
+
+                <p class="text-xs text-gray-500 truncate">Здравствуйте! Чем могу помочь?</p>
+
+            </div>
+
+            <div class="w-2 h-2 rounded-full bg-primary"></div>
+
+        </div>`;
+
+        if (myChats.length > 0) {
+
+            empty.classList.add('hidden');
+
+            html += myChats.map(c => {
+
+                const doc = doctors.find(d => d.id === c.doctorId);
+
+                return `
+
+                <div onclick="openDoctorChat(${c.id})" class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors mt-3">
+
+                    <div class="w-12 h-12 rounded-full overflow-hidden border border-gray-200"><img src="${doc.img}" class="w-full h-full object-cover"></div>
+
+                    <div class="flex-1">
+
+                        <h3 class="font-bold text-gray-900">${doc.name}</h3>
+
+                        <p class="text-xs text-gray-500 truncate">${c.lastMsg}</p>
+
+                    </div>
+
+                </div>`;
+
+            }).join('');
+
+        }
+
+        list.innerHTML = html;
+
+        changeLanguage(currentLang);
+
+    }
+
+    function openDoctorChat(chatId) {
+
+        const chat = myChats.find(c => c.id === chatId);
+
+        const doc = doctors.find(d => d.id === chat.doctorId);
+
+        document.getElementById('chat-title').innerText = doc.name;
+
+        document.getElementById('chat-messages').innerHTML = `
+
+            <div class="flex justify-end"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${chat.lastMsg}</div></div>
+
+            <div class="flex justify-start"><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">Здравствуйте! Жду вас на приеме.</div></div>
+
+        `;
+
+        goToScreen('support-chat');
+
+    }
+
+    function filterByCategory(category) {
+
+        document.getElementById('all-doctors-title').innerText = category;
+
+        const filtered = doctors.filter(d => d.spec === category);
+
+        const allGrid = document.getElementById('all-doctors-grid');
+
+        if(allGrid) {
+
+            const createCard = (doc) => `
+
+                <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl shadow-card border border-gray-100 flex flex-col items-center relative cursor-pointer active:scale-95 transition-transform">
+
+                    <div class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg shadow-sm border border-gray-100"><i class="fas fa-star text-yellow-400 text-[10px]"></i><span class="text-[10px] font-bold">${doc.rating}</span></div>
+
+                    <div class="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md"><img src="${doc.img}" class="w-full h-full object-cover"></div>
+
+                    <h3 class="font-bold text-sm text-gray-800 text-center">${doc.name}</h3>
+
+                    <p class="text-[11px] text-gray-400 mb-4" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
+
+                    <button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-teal-700 transition-colors"><i class="fas fa-arrow-right text-sm -rotate-45"></i></button>
+
+                </div>`;
+
+            allGrid.innerHTML = filtered.length > 0 ? filtered.map(createCard).join('') : '<div class="col-span-2 text-center text-gray-400 py-10" data-key="empty">Ничего не найдено</div>';
+
+        }
+
+        goToScreen('all-doctors');
+
+        changeLanguage(currentLang);
+
+    }
+
+   function loadUserState() {
+        const hasSession = localStorage.getItem('qamqorSession');
+        const savedAccount = localStorage.getItem('qamqorAccount');
+
+        if (hasSession === 'active' && savedAccount) {
+            document.getElementById('screen-splash').classList.remove('hidden');
+            document.getElementById('screen-splash').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('screen-splash').classList.add('hidden');
+                document.getElementById('screen-splash').style.display = 'none';
+                
+                currentUser = JSON.parse(savedAccount);
+                updateProfileUI();
+                navHistory = []; 
+                
+                // ПРОФИЛЬНАЯ МАРШРУТИЗАЦИЯ (Role-Based Routing)
+                if (currentUser.role === 'doctor') {
+                    goToScreen('doctor-main', false);
+                } else {
+                    goToScreen('main', false);
+                }
+            }, 2000);
+        } else {
+            goToScreen('onboarding', false);
+            updateOnboardingUI();
+        }
+    }
+
+    function saveUser(name, email, password, iin) {
+        // По умолчанию все новые регистрации — это пациенты
+        currentUser = { name, email, password, iin, role: 'patient' }; 
+        localStorage.setItem('qamqorAccount', JSON.stringify(currentUser)); 
+        localStorage.setItem('qamqorSession', 'active'); 
+        updateProfileUI();
+    }
+
+    function updateProfileUI() {
+        if(!currentUser) return;
+        
+        // Обновляем главный экран профиля
+        document.getElementById('profile-name').textContent = currentUser.name;
+        document.getElementById('profile-email').textContent = currentUser.email;
+        
+        // Обновляем экран Личных данных
+        document.getElementById('pd-name').textContent = currentUser.name;
+        document.getElementById('pd-iin').value = currentUser.iin || "980512300456";
+        
+        // Подтягиваем значения в новые поля для редактирования
+        const emailInput = document.getElementById('pd-email-input');
+        if(emailInput) emailInput.value = currentUser.email;
+
+        const bloodSelect = document.getElementById('pd-blood-select');
+        if(bloodSelect) {
+            // Если группы крови еще нет в профиле, ставим "Неизвестно"
+            bloodSelect.value = currentUser.bloodType || "Неизвестно";
+        }
+    }
+
+function savePersonalData() {
+        if (!currentUser) return;
+        
+        const newEmail = document.getElementById('pd-email-input').value.trim();
+        const newBlood = document.getElementById('pd-blood-select').value;
+
+        // Простая проверка email
+        if (!newEmail.includes('@') || !newEmail.includes('.')) {
+            alert('Пожалуйста, введите корректный Email.');
+            return;
+        }
+
+        // Обновляем данные пользователя
+        currentUser.email = newEmail;
+        currentUser.bloodType = newBlood;
+
+        // Сохраняем в базу (localStorage)
+        localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
+        
+        // Обновляем интерфейс
+        updateProfileUI(); 
+        
+        // Показываем красивое уведомление (которое мы делали для анализов)
+        if (typeof showToast === "function") {
+            showToast(translations[currentLang].saved_success || "Успешно сохранено!");
+        } else {
+            alert("Данные успешно сохранены!");
+        }
+        
+        // Возвращаемся в профиль
+        goBack();
+    }
+
+    function changeLanguage(lang) {
+
+        currentLang = lang;
+
+        const btnRu = document.getElementById('btn-ru');
+
+        const btnKk = document.getElementById('btn-kk');
+
+        if (lang === 'ru') {
+
+            btnRu.className = "flex-1 py-3 rounded-xl text-sm font-bold bg-white shadow-sm text-primary transition-all";
+
+            btnKk.className = "flex-1 py-3 rounded-xl text-sm font-bold text-gray-500 transition-all";
+
+        } else {
+
+            btnKk.className = "flex-1 py-3 rounded-xl text-sm font-bold bg-white shadow-sm text-primary transition-all";
+
+            btnRu.className = "flex-1 py-3 rounded-xl text-sm font-bold text-gray-500 transition-all";
+
+        }
+
+        document.querySelectorAll('[data-key]').forEach(el => {
+
+            const key = el.getAttribute('data-key');
+
+            if (translations[lang][key]) {
+
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+
+                    el.placeholder = translations[lang][key];
+
+                } else {
+
+                    el.innerText = translations[lang][key];
+
+                }
+
+            }
+
+        });
+
+        document.getElementById('search-input').placeholder = translations[lang].search_placeholder;
+
+        updateOnboardingUI();
+
+    }
+
+    function togglePhotoModal() { document.getElementById('modal-photo').classList.toggle('hidden'); }
+
+    function openFullPhoto() {
+
+        document.getElementById('lightbox-img').src = document.getElementById('profile-avatar').src;
+
+        document.getElementById('lightbox-photo').classList.remove('hidden');
+
+        togglePhotoModal();
+
+    }
+
+    function handleProfilePhotoChange(event) {
+
+        const file = event.target.files[0];
+
+        if (file) {
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) { document.getElementById('profile-avatar').src = e.target.result; };
+
+            reader.readAsDataURL(file);
+
+        }
+
+    }
+
+    // NAVIGATION SYSTEM
+
+    function goToScreen(screenId, animate = true, resetHistory = false) {
+
+        // Find current screen
+
+        const visibleScreen = document.querySelector('div[id^="screen-"]:not(.hidden):not(#screen-splash)');
+
+        if (visibleScreen && !resetHistory && visibleScreen.id !== ('screen-' + screenId)) {
+
+            navHistory.push(visibleScreen.id.replace('screen-', ''));
+
+        }
+
+        if (resetHistory) navHistory = [];
+
+        document.querySelectorAll('[id^="screen-"]').forEach(el => {
+
+            if (el.id !== 'screen-splash' && !el.id.includes('lightbox')) el.classList.add('hidden');
+
+        });
+
+        const target = document.getElementById('screen-' + screenId);
+
+        if(target) {
+
+            target.classList.remove('hidden');
+
+            if (animate) {
+
+                target.classList.remove('animate-fade-in', 'animate-slide-in');
+
+                void target.offsetWidth; 
+
+                target.classList.add(screenId === 'main' ? 'animate-fade-in' : 'animate-slide-in');
+
+            }
+
+            window.scrollTo(0,0);
+
+            if (screenId === 'main' && navHistory.length === 0) switchTab('home');
+
+        }
+
+    }
+
+    function goBack() {
+
+        if (navHistory.length > 0) {
+
+            const prevScreen = navHistory.pop();
+
+            // Directly show prev screen without pushing to history again
+
+            document.querySelectorAll('[id^="screen-"]').forEach(el => {
+
+                if (el.id !== 'screen-splash' && !el.id.includes('lightbox')) el.classList.add('hidden');
+
+            });
+
+            const target = document.getElementById('screen-' + prevScreen);
+
+            if(target) {
+
+                target.classList.remove('hidden');
+
+                target.classList.add('animate-fade-in'); 
+
+            }
+
+        } else {
+
+            // Default fallbacks if history empty
+
+            const current = document.querySelector('div[id^="screen-"]:not(.hidden)');
+
+            if(current && current.id === 'screen-main') return; 
+
+            goToScreen('main', true, true);
+
+        }
+
+    }
+
+    function switchTab(tabName) {
+
+        ['home', 'services', 'chat', 'profile'].forEach(t => {
+
+            document.getElementById('tab-' + t).classList.add('hidden');
+
+            const navBtn = document.getElementById('nav-' + t);
+
+            navBtn.classList.remove('text-primary'); 
+
+            navBtn.classList.add('text-gray-400');
+
+            const iconMap = { home: 'home', services: 'folder', chat: 'comment-dots', profile: 'user' };
+
+            if (t === 'home') navBtn.innerHTML = `<div class="w-12 h-12 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div>`;
+
+            else navBtn.innerHTML = `<i class="far fa-${iconMap[t]} text-xl"></i>`;
+
+        });
+
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+        document.getElementById('tab-' + tabName).classList.add('animate-fade-in');
+
+        const activeNav = document.getElementById('nav-' + tabName);
+
+        activeNav.classList.remove('text-gray-400');
+
+        activeNav.classList.add('text-primary');
+
+        const iconMap = { home: 'home', services: 'folder', chat: 'comment-dots', profile: 'user' };
+
+        if (tabName !== 'home') activeNav.innerHTML = `<i class="fas fa-${iconMap[tabName]} text-xl"></i>`;
+
+        // Toggle Search Visibility
+
+        const searchContainer = document.getElementById('search-container');
+
+        if (tabName === 'home') {
+
+            searchContainer.style.height = 'auto';
+
+            searchContainer.style.opacity = '1';
+
+            searchContainer.style.pointerEvents = 'auto';
+
+            searchContainer.style.marginTop = '0';
+
+        } else {
+
+            searchContainer.style.height = '0';
+
+            searchContainer.style.opacity = '0';
+
+            searchContainer.style.pointerEvents = 'none';
+
+            searchContainer.style.marginTop = '-10px';
+
+        }
+
+    }
+
+    currentStep = 0;
+
+    const onboardingData = [
+
+        { title: "onboarding1_title", text: "onboarding1_text", image: `<svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl"><circle cx="100" cy="100" r="80" fill="#E6F2F2"/><circle cx="100" cy="100" r="60" fill="#2A7F7F"/><path d="M70 100 L90 120 L130 80" stroke="white" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+
+        { title: "onboarding2_title", text: "onboarding2_text", image: `<svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl"><path fill="#FFEDD5" d="M39.9,-65.7C50.8,-58.4,58.3,-44.8,65.6,-31.2C72.9,-17.6,79.9,-4,77.6,8.6C75.3,21.3,63.7,33,52.3,42.7C40.9,52.4,29.7,60.1,16.9,64.3C4.1,68.5,-10.3,69.2,-22.8,64.7C-35.3,60.2,-45.9,50.5,-54.8,39.1C-63.7,27.7,-70.9,14.6,-70.8,1.6C-70.6,-11.4,-63.1,-24.3,-53.2,-34.6C-43.3,-44.9,-31,-52.6,-18.6,-58.5C-6.2,-64.4,6.3,-68.5,19.9,-65.7Z" transform="translate(100 100)" /><rect x="60" y="60" width="80" height="80" rx="24" fill="#F2994A" /><circle cx="125" cy="75" r="16" fill="#2A7F7F" stroke="#FFEDD5" stroke-width="3" /><foreignObject x="60" y="60" width="80" height="80"><div class="w-full h-full rounded-[24px] overflow-hidden"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRd1OXBqIuOkPParmp3eOutB8pNgqYR2hYyMQ&s" class="w-full h-full object-cover"></div></foreignObject></svg>` },
+
+        { title: "onboarding3_title", text: "onboarding3_text", image: `<svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-xl"><circle cx="100" cy="100" r="60" fill="#3B82F6"/><text x="100" y="115" font-family="Marck Script" font-size="40" fill="white" text-anchor="middle">QM</text></svg>` }
+
+    ];
+
+    function updateOnboardingUI() {
+
+        const d = onboardingData[currentStep];
+
+        document.getElementById('onboarding-image').innerHTML = d.image;
+
+        document.getElementById('onboarding-text').innerHTML = `<h1 class="text-3xl font-extrabold text-gray-900 mb-4">${translations[currentLang][d.title]}</h1><p class="text-gray-500">${translations[currentLang][d.text]}</p>`;
+
+        const dots = document.getElementById('onboarding-dots');
+
+        dots.innerHTML = '';
+
+        onboardingData.forEach((_, i) => dots.innerHTML += `<div class="${i === currentStep ? 'w-8 bg-primary' : 'w-2 bg-gray-300'} h-2 rounded-full transition-all"></div>`);
+
+        document.getElementById('onboarding-back-btn').classList.toggle('opacity-0', currentStep === 0);
+
+        document.getElementById('onboarding-back-btn').classList.toggle('pointer-events-none', currentStep === 0);
+
+    }
+
+    function nextOnboarding() { if (currentStep < 2) { currentStep++; updateOnboardingUI(); } else { goToScreen('login'); } }
+
+    function prevOnboarding() { if (currentStep > 0) { currentStep--; updateOnboardingUI(); } }
+
+    function handleLogin(e) { 
+        e.preventDefault(); 
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+
+        // 1. Проверка хардкод-ВРАЧА
+        if (email === 'doctor123@qamqormed.gov.kz' && pass === 'Doctor123') {
+            const docAccount = {
+                name: "Главный Врач", 
+                email: email, 
+                password: pass, 
+                role: "doctor" // Устанавливаем роль врача
+            };
+            localStorage.setItem('qamqorAccount', JSON.stringify(docAccount));
+            localStorage.setItem('qamqorSession', 'active');
+            loadUserState();
+            return; // Прерываем функцию, так как врач успешно вошел
+        }
+
+        // 2. Обычная проверка ПАЦИЕНТА
+        const savedAccount = JSON.parse(localStorage.getItem('qamqorAccount'));
+
+        if (savedAccount && savedAccount.email === email) {
+            if (savedAccount.password !== pass) {
+                alert('❌ Неверный пароль!');
+                return;
+            }
+            localStorage.setItem('qamqorSession', 'active');
+            loadUserState();
+        } else {
+            // Демо-вход для пациента
+            if (!savedAccount && (email === 'user123@gmail.com' && pass === 'Password123')) {
+                saveUser("Адам Адамов", email, pass, "950321452470");
+                loadUserState();
+            } else {
+                 alert('❌ Пользователь не найден или неверные данные!');
+            }
+        }
+    }
+
+    function handleRegister(e) { 
+        e.preventDefault(); 
+        saveUser(
+            document.getElementById('reg-name').value, 
+            document.getElementById('reg-email').value,
+            document.getElementById('reg-pass').value,
+            document.getElementById('reg-iin').value
+        ); 
+        loadUserState(); 
+    }
+
+    function handleForgot(e) { e.preventDefault(); alert("✅ Инструкции отправлены на почту!"); goToScreen('login'); }
+
+    function handleLogout() { 
+        localStorage.removeItem('qamqorSession'); // Удаляем только сессию!
+        currentUser = null; 
+        currentStep = 0; 
+        goToScreen('onboarding', true, true); 
+        updateOnboardingUI(); 
+    }
+
+    function handleChangePassword(e) {
+        e.preventDefault();
+        const oldPass = document.getElementById('old-pass').value;
+        const newPass = document.getElementById('new-pass').value;
+        const confirmPass = document.getElementById('confirm-pass').value;
+        
+        if (!currentUser || currentUser.password !== oldPass) {
+             alert('❌ Старый пароль неверен!');
+             return;
+        }
+        if(newPass !== confirmPass) {
+            alert('❌ Пароли не совпадают!');
+            return;
+        }
+        if(newPass.length < 8) {
+            alert('❌ Пароль должен быть минимум 8 символов!');
+            return;
+        }
+        
+        currentUser.password = newPass;
+        localStorage.setItem('qamqorAccount', JSON.stringify(currentUser)); // Сохраняем в новую БД
+        
+        alert('✅ Пароль успешно изменён!');
+        document.getElementById('old-pass').value = '';
+        document.getElementById('new-pass').value = '';
+        document.getElementById('confirm-pass').value = '';
+        goToScreen('settings');
+    }
+
+    function markAllRead() { document.getElementById('notif-dot').classList.add('hidden'); }
+
+    function openNotifDetail(el) {
+
+        const content = el.querySelector('.detail-content');
+
+        if(content) {
+
+            document.getElementById('notif-detail-container').innerHTML = content.innerHTML;
+
+            goToScreen('notif-detail');
+
+            markAllRead();
+
+        }
+
+    }
+
+    function closeNotifDetail() { goBack(); }
+
+    function toggleCityModal() { document.getElementById('modal-city').classList.toggle('hidden'); }
+
+    function selectCity(c) { currentCity = c; document.getElementById('current-city').textContent = c; document.getElementById('modal-city').classList.add('hidden'); }
+
+    function togglePass(id) { const i = document.getElementById(id); i.type = i.type === "password" ? "text" : "password"; }
+
+    function validatePassword(pass) {
+
+        const len = pass.length >= 8;
+
+        const digits = (pass.match(/\d/g) || []).length >= 2;
+
+        const upper = /[A-ZА-Я]/.test(pass);
+
+        updateRequirement('req-length', len);
+
+        updateRequirement('req-digits', digits);
+
+        updateRequirement('req-capital', upper);
+
+        const submitBtn = document.getElementById('reg-submit-btn');
+
+        if(len && digits && upper) {
+
+            submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+
+        } else {
+
+            submitBtn.classList.add('opacity-50', 'pointer-events-none');
+
+        }
+
+    }
+
+    function updateRequirement(id, valid) {
+
+        const el = document.getElementById(id);
+
+        const icon = el.querySelector('.icon-box');
+
+        if(valid) { el.classList.replace('text-gray-400','text-green-600'); icon.classList.replace('bg-gray-200','bg-green-500'); icon.innerHTML='<i class="fas fa-check text-[8px] text-white"></i>'; }
+
+        else { el.classList.replace('text-green-600','text-gray-400'); icon.classList.replace('bg-green-500','bg-gray-200'); icon.innerHTML=''; }
+
+    }
+
+    function filterDoctors(q) { 
+
+        document.getElementById('all-doctors-title').innerText = "Поиск: " + q;
+
+        const cards = document.querySelectorAll('#all-doctors-grid .bg-white'); 
+
+        if (q.length === 0) {
+
+            // Reset to show all
+
+            renderDoctors();
+
+            document.getElementById('all-doctors-title').innerText = "Все врачи";
+
+        } else {
+
+             const filtered = doctors.filter(d => d.name.toLowerCase().includes(q.toLowerCase()) || d.spec.toLowerCase().includes(q.toLowerCase()));
+
+             const allGrid = document.getElementById('all-doctors-grid');
+
+             const createCard = (doc) => `
+
+                <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl shadow-card border border-gray-100 flex flex-col items-center relative cursor-pointer active:scale-95 transition-transform">
+
+                    <div class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg shadow-sm border border-gray-100"><i class="fas fa-star text-yellow-400 text-[10px]"></i><span class="text-[10px] font-bold">${doc.rating}</span></div>
+
+                    <div class="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md"><img src="${doc.img}" class="w-full h-full object-cover"></div>
+
+                    <h3 class="font-bold text-sm text-gray-800 text-center">${doc.name}</h3>
+
+                    <p class="text-[11px] text-gray-400 mb-4" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
+
+                    <button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-teal-700 transition-colors"><i class="fas fa-arrow-right text-sm -rotate-45"></i></button>
+
+                </div>`;
+
+             if(allGrid) allGrid.innerHTML = filtered.length > 0 ? filtered.map(createCard).join('') : '<div class="col-span-2 text-center text-gray-400 py-10" data-key="empty">Ничего не найдено</div>';
+
+             // If we are not on all-doctors screen, go there
+
+             const visible = document.getElementById('screen-all-doctors');
+
+             if (visible.classList.contains('hidden')) {
+
+                 goToScreen('all-doctors');
+
+             }
+
+             changeLanguage(currentLang);
+
+        }
+
+    }
+
+    function addCard() {
+
+        const btn = document.querySelector('#payments-empty button');
+
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+        setTimeout(() => {
+
+            document.getElementById('payments-empty').classList.add('hidden');
+
+            document.getElementById('payments-list').classList.remove('hidden');
+
+            // VISA layout
+
+            document.getElementById('payments-list').innerHTML = `
+
+                <div class="visa-card p-6 rounded-[1.5rem] shadow-xl relative overflow-hidden font-mono aspect-[1.6/1]">
+
+                    <!-- CHIP -->
+
+                    <div class="absolute top-6 left-6 w-12 h-10 bg-[#e0c088] rounded-md border border-[#b89a60] flex items-center justify-center overflow-hidden">
+
+                        <div class="w-full h-[1px] bg-[#8a7040] absolute top-1/3"></div>
+
+                        <div class="w-full h-[1px] bg-[#8a7040] absolute bottom-1/3"></div>
+
+                        <div class="h-full w-[1px] bg-[#8a7040] absolute left-1/3"></div>
+
+                        <div class="h-full w-[1px] bg-[#8a7040] absolute right-1/3"></div>
+
+                        <div class="w-6 h-4 border border-[#8a7040] rounded-sm"></div>
+
+                    </div>
+
+                    <!-- VISA LOGO -->
+
+                    <div class="absolute top-6 right-6">
+
+                        <i class="fab fa-cc-visa text-white text-5xl opacity-90"></i>
+
+                    </div>
+
+                    <!-- CARD NUMBER -->
+
+                    <div class="absolute top-1/2 left-6 right-6 transform -translate-y-1/2 mt-4">
+
+                        <p class="font-mono text-xl tracking-widest text-white drop-shadow-md flex justify-between">
+
+                            <span>****</span><span>****</span><span>****</span><span>1234</span>
+
+                        </p>
+
+                    </div>
+
+                    <!-- DATE & NAME -->
+
+                    <div class="absolute bottom-6 left-6 text-white drop-shadow-md">
+
+                        <div class="text-[10px] opacity-80 uppercase mb-0 tracking-wider">Valid Thru</div>
+
+                        <div class="font-bold text-lg mb-1">08/28</div>
+
+                        <div class="font-bold text-lg tracking-wider uppercase">${currentUser ? currentUser.name.toUpperCase() : 'MEDET PAZYL'}</div>
+
+                    </div>
+
+                </div>`;
+
+        }, 1000);
+
+    }
+
+    function toggleDarkTheme() {
+
+        const toggle = document.getElementById('dark-theme-toggle');
+
+        const isDark = document.body.classList.toggle('dark-theme');
+
+        if(isDark) {
+
+            toggle.classList.remove('fa-toggle-off', 'text-gray-300');
+
+            toggle.classList.add('fa-toggle-on', 'text-primary');
+
+            localStorage.setItem('darkTheme', 'true');
+
+            // Play sound
+
+            document.getElementById('theme-audio').play().catch(e => console.log('Audio error:', e));
+
+        } else {
+
+            toggle.classList.remove('fa-toggle-on', 'text-primary');
+
+            toggle.classList.add('fa-toggle-off', 'text-gray-300');
+
+            localStorage.setItem('darkTheme', 'false');
+
+        }
+
+    }
+
+    function toggleAccessibility() {
+
+        const toggle = document.getElementById('accessibility-toggle');
+
+        const isAccessible = document.body.classList.toggle('accessibility-mode');
+
+        if(isAccessible) {
+
+            toggle.classList.remove('fa-toggle-off', 'text-gray-300');
+
+            toggle.classList.add('fa-toggle-on', 'text-primary');
+
+            localStorage.setItem('accessibilityMode', 'true');
+
+        } else {
+
+            toggle.classList.remove('fa-toggle-on', 'text-primary');
+
+            toggle.classList.add('fa-toggle-off', 'text-gray-300');
+
+            localStorage.setItem('accessibilityMode', 'false');
+
+        }
+
+    }
+
+    function loadThemeSettings() {
+
+        const darkTheme = localStorage.getItem('darkTheme') === 'true';
+
+        const accessibilityMode = localStorage.getItem('accessibilityMode') === 'true';
+
+        if(darkTheme) {
+
+            document.body.classList.add('dark-theme');
+
+            const toggle = document.getElementById('dark-theme-toggle');
+
+            if(toggle) {
+
+                toggle.classList.remove('fa-toggle-off', 'text-gray-300');
+
+                toggle.classList.add('fa-toggle-on', 'text-primary');
+
+            }
+
+        }
+
+        if(accessibilityMode) {
+
+            document.body.classList.add('accessibility-mode');
+
+            const toggle = document.getElementById('accessibility-toggle');
+
+            if(toggle) {
+
+                toggle.classList.remove('fa-toggle-off', 'text-gray-300');
+
+                toggle.classList.add('fa-toggle-on', 'text-primary');
+
+            }
+
+        }
+
+    }
+
+    function sendMessage() {
+
+        const input = document.getElementById('chat-input');
+
+        const text = input.value.trim();
+
+        if(!text) return;
+
+        const container = document.getElementById('chat-messages');
+
+        container.innerHTML += `<div class="flex justify-end"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${text}</div></div>`;
+
+        input.value = '';
+
+        container.scrollTop = container.scrollHeight;
+
+        setTimeout(() => {
+
+            container.innerHTML += `<div class="flex justify-start animate-fade-in"><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2" data-key="operator_reply">Оператор ответит в ближайшее время.</div></div>`;
+
+            container.scrollTop = container.scrollHeight;
+
+            changeLanguage(currentLang);
+
+        }, 1000);
+
+    }
+
+</script>
+
+</body>
+
+</html>
