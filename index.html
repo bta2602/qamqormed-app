@@ -1858,7 +1858,13 @@
         // Показываем скелетон загрузки
         list.innerHTML = `<div class="flex justify-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-primary"></i></div>`;
 
-        const userIIN = currentUser ? (currentUser.iin || "070226550487") : "070226550487";
+        const userIIN = currentUser ? currentUser.iin : null;
+
+
+        if (!userIIN) {
+            document.getElementById('analyses-list').innerHTML = `<p class="text-center text-gray-400 mt-10">У вас не указан ИИН</p>`;
+            return;
+        }
 
         try {
             // Скачиваем анализы из базы
@@ -2063,7 +2069,14 @@
         const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth()+1).padStart(2, '0')}.${today.getFullYear()}`;
 
         const isDoctor = currentUser && currentUser.role === 'doctor';
-        const targetIIN = isDoctor ? document.getElementById('analysis-patient-iin').value : (currentUser.iin || "070226550487");
+        const targetIIN = isDoctor ? document.getElementById('analysis-patient-iin').value : currentUser.iin;
+
+        if (!targetIIN) {
+            alert("Ошибка: Невозможно сохранить анализ, так как отсутствует ИИН.");
+            btn.innerHTML = originalBtnHtml;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+            return;
+        }
 
         try {
             // Отправляем в базу данных!
