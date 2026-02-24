@@ -2942,43 +2942,57 @@ function savePersonalData() {
 
     function prevOnboarding() { if (currentStep > 0) { currentStep--; updateOnboardingUI(); } }
 
-    function handleLogin(e) { 
+    async function handleLogin(e) { 
         e.preventDefault(); 
+        
+        // 1. Анимация загрузки на кнопке
+        const btn = document.querySelector('#screen-login button[type="submit"]');
+        const btnText = document.getElementById('login-btn-text');
+        const loader = document.getElementById('login-loader');
+        
+        btnText.classList.add('hidden');
+        loader.classList.remove('hidden');
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        // 2. Берем введенные данные
         const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
+        const password = document.getElementById('login-pass').value;
 
-        // 1. Проверка хардкод-ВРАЧА
-        if (email === 'doctor123@qamqormed.gov.kz' && pass === 'Doctor123') {
-            const docAccount = {
-                name: "Главный Врач", 
-                email: email, 
-                password: pass, 
-                role: "doctor" // Устанавливаем роль врача
-            };
-            localStorage.setItem('qamqorAccount', JSON.stringify(docAccount));
-            localStorage.setItem('qamqorSession', 'active');
-            loadUserState();
-            return; // Прерываем функцию, так как врач успешно вошел
-        }
+        try {
+            // 3. Отправляем запрос на сервер проверки паролей
+            const response = await fetch('/.netlify/functions/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
 
-        // 2. Обычная проверка ПАЦИЕНТА
-        const savedAccount = JSON.parse(localStorage.getItem('qamqorAccount'));
+            const data = await response.json();
 
-        if (savedAccount && savedAccount.email === email) {
-            if (savedAccount.password !== pass) {
-                alert('❌ Неверный пароль!');
-                return;
-            }
-            localStorage.setItem('qamqorSession', 'active');
-            loadUserState();
-        } else {
-            // Демо-вход для пациента
-            if (!savedAccount && (email === 'user123@gmail.com' && pass === 'Password123')) {
-                saveUser("Адам Адамов", email, pass, "950321452470");
-                loadUserState();
+            // 4. Проверяем ответ
+            if (response.ok) {
+                // Сервер дал добро! Сохраняем сессию на этом устройстве
+                currentUser = data.user;
+                localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
+                localStorage.setItem('qamqorSession', 'active');
+                
+                // Возвращаем кнопку в норму и запускаем приложение
+                btnText.classList.remove('hidden');
+                loader.classList.add('hidden');
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                
+                loadUserState(); 
             } else {
-                 alert('❌ Пользователь не найден или неверные данные!');
+                // Ошибка (неверный пароль)
+                alert('❌ ' + data.error);
+                btnText.classList.remove('hidden');
+                loader.classList.add('hidden');
+                btn.classList.remove('opacity-50', 'pointer-events-none');
             }
+        } catch (error) {
+            alert('❌ Ошибка соединения с сервером.');
+            btnText.classList.remove('hidden');
+            loader.classList.add('hidden');
+            btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     }
 
