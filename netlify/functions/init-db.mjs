@@ -49,4 +49,5 @@ export default async function handler(request, context) {
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
+
 }
