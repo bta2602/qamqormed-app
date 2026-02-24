@@ -2982,15 +2982,49 @@ function savePersonalData() {
         }
     }
 
-    function handleRegister(e) { 
+    async function handleRegister(e) { 
         e.preventDefault(); 
-        saveUser(
-            document.getElementById('reg-name').value, 
-            document.getElementById('reg-email').value,
-            document.getElementById('reg-pass').value,
-            document.getElementById('reg-iin').value
-        ); 
-        loadUserState(); 
+        
+        // 1. Находим кнопку и меняем её внешний вид на "Загрузка..."
+        const btn = document.getElementById('reg-submit-btn');
+        const originalText = btn.innerText;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        
+        // 2. Собираем данные из полей ввода
+        const name = document.getElementById('reg-name').value;
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-pass').value;
+        const iin = document.getElementById('reg-iin').value;
+
+        try {
+            // 3. Отправляем запрос на наш новый серверный файл register.mjs
+            const response = await fetch('/.netlify/functions/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, iin, role: 'patient' })
+            });
+
+            const data = await response.json();
+
+            // 4. Проверяем ответ сервера
+            if (response.ok) {
+                // Успех! Пользователь в базе данных.
+                // Сохраняем сессию локально, чтобы человек сразу вошел в приложение
+                saveUser(name, email, password, iin); 
+                loadUserState();
+            } else {
+                // Ошибка от сервера (например, такой Email или ИИН уже зарегистрирован)
+                alert('❌ ' + data.error);
+                btn.innerHTML = originalText;
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        } catch (error) {
+            // Ошибка интернета или сети
+            alert('❌ Ошибка соединения с сервером.');
+            btn.innerHTML = originalText;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
     }
 
     function handleForgot(e) { e.preventDefault(); alert("✅ Инструкции отправлены на почту!"); goToScreen('login'); }
