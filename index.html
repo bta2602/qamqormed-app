@@ -1843,43 +1843,59 @@
 
     }
 
-    function initAnalyses() {
-        const saved = localStorage.getItem('qamqorAnalyses');
-        if (saved) {
-            myAnalysesList = JSON.parse(saved);
-        } else {
-            // Демо данные, если пусто
-            myAnalysesList = [
-                { id: 1, type: "Общий анализ крови", date: "23.02.2026", overallStatus: "normal", results: [ { name: "Гемоглобин", value: 130, min: 120, max: 160, unit: "г/л", status: "normal" } ] }
-            ];
+    async function initAnalyses() {
+        const select = document.getElementById('analysis-type-select');
+        // Заполняем селект типами анализов (если он еще пустой)
+        if (select.options.length <= 1) {
+            Object.keys(analysisConfig).forEach(type => {
+                select.innerHTML += `<option value="${type}">${type}</option>`;
+            });
         }
         
-        // Заполняем селект типами анализов
-        const select = document.getElementById('analysis-type-select');
-        Object.keys(analysisConfig).forEach(type => {
-            select.innerHTML += `<option value="${type}">${type}</option>`;
-        });
-        
-        renderAnalyses();
-    }
-
-    // ВЫЗОВИ initAnalyses() внутри document.addEventListener('DOMContentLoaded', ...) вместо renderAnalyses()!
-
-    function renderAnalyses() {
         const list = document.getElementById('analyses-list');
         if(!list) return;
 
-        // 1. Загружаем все анализы (Глобальная база)
-        const saved = localStorage.getItem('qamqorAnalyses');
-        let globalAnalyses = saved ? JSON.parse(saved) : [];
-        
-        // 2. Ищем ИИН текущего пациента
-        const userIIN = currentUser ? (currentUser.iin || "070226550487") : "070226550487";
-        
-        // 3. Фильтруем: показываем пациенту только ЕГО анализы
-        myAnalysesList = globalAnalyses.filter(a => a.patientIIN === userIIN || !a.patientIIN);
+        // Показываем скелетон загрузки
+        list.innerHTML = `<div class="flex justify-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-primary"></i></div>`;
 
-        if (myAnalysesList.length === 0) {
+        const userIIN = currentUser ? (currentUser.iin || "070226550487") : "070226550487";
+
+        try {
+            // Скачиваем анализы из базы
+            const response = await fetch('/.netlify/functions/get-analyses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ iin: userIIN })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                myAnalysesList = data.analyses; // Сохраняем то, что пришло с сервера
+                
+                // Преобразуем поле results из JSON-строки обратно в объект (если нужно)
+                myAnalysesList = myAnalysesList.map(a => {
+                    if (typeof a.results === 'string') a.results = JSON.parse(a.results);
+                    // Переименовываем поля БД в те, что ждет наш HTML
+                    return {
+                        ...a,
+                        overallStatus: a.overall_status,
+                        doctorId: a.doctor_email
+                    };
+                });
+
+                // Вызываем отрисовку
+                renderAnalysesForDb(); 
+            }
+        } catch (error) {
+            list.innerHTML = `<p class="text-center text-red-500 mt-5">Не удалось загрузить анализы</p>`;
+        }
+    }
+
+    // Вспомогательная функция отрисовки (заменяет старый renderAnalyses)
+    function renderAnalysesForDb() {
+        const list = document.getElementById('analyses-list');
+        
+        if (!myAnalysesList || myAnalysesList.length === 0) {
             list.innerHTML = `<div class="flex flex-col items-center justify-center h-48 text-gray-400 mt-10"><div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3"><i class="fas fa-microscope text-2xl text-gray-300"></i></div><p data-key="no_analyses" class="font-bold text-gray-500">Нет добавленных анализов</p></div>`;
             if (typeof changeLanguage === 'function') changeLanguage(currentLang);
             return;
@@ -1909,7 +1925,6 @@
                 `;
             }).join('');
 
-            // Плашка "От врача", если анализ добавил доктор
             let doctorBadge = a.doctorId ? `<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-lg ml-2 font-bold border border-blue-100"><i class="fas fa-user-md"></i> От врача</span>` : '';
 
             return `
@@ -1923,7 +1938,7 @@
                         </div>
                     </div>
                     <span class="${badgeStyle} border text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-sm" data-key="${badgeKey}">
-                        <i class="fas fa-circle text-[8px] ${iconColor} animate-pulse"></i> ${translations[currentLang][badgeKey] || (a.overallStatus==='normal'?'В норме':a.overallStatus==='warning'?'Отклонения':'Критично')}
+                        <i class="fas fa-circle text-[8px] ${iconColor} animate-pulse"></i> ${translations[currentLang][badgeKey] || (a.overallStatus==='normal'?'В норме':'Отклонения')}
                     </span>
                 </div>
                 <div class="bg-gray-50/50 rounded-2xl p-4 border border-gray-50">
@@ -2012,12 +2027,18 @@
         }
     }
 
-    function saveAnalysis() {
+    async function saveAnalysis() {
         const type = document.getElementById('analysis-type-select').value;
         const fields = analysisConfig[type];
         let results = [];
         let hasWarning = false;
         let hasDanger = false;
+
+        // Кнопка в режим загрузки
+        const btn = document.getElementById('save-analysis-btn');
+        const originalBtnHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
 
         fields.forEach(f => {
             const val = parseFloat(document.getElementById(`input-${f.id}`).value);
@@ -2041,33 +2062,41 @@
         const today = new Date();
         const dateStr = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth()+1).padStart(2, '0')}.${today.getFullYear()}`;
 
-        // 🎯 МАГИЯ ЗДЕСЬ: Определяем, кому сохраняем анализ
         const isDoctor = currentUser && currentUser.role === 'doctor';
         const targetIIN = isDoctor ? document.getElementById('analysis-patient-iin').value : (currentUser.iin || "070226550487");
 
-        const newAnalysis = { 
-            id: Date.now(), 
-            type: type, 
-            date: dateStr, 
-            results: results, 
-            overallStatus: overallStatus,
-            patientIIN: targetIIN, // Привязываем к ИИН!
-            doctorId: isDoctor ? currentUser.email : null // Если отправил врач - ставим метку
-        };
+        try {
+            // Отправляем в базу данных!
+            const response = await fetch('/.netlify/functions/save-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patientIIN: targetIIN,
+                    doctorEmail: isDoctor ? currentUser.email : null,
+                    type: type,
+                    date: dateStr,
+                    results: results,
+                    overallStatus: overallStatus
+                })
+            });
 
-        // Загружаем глобальную базу и сохраняем туда
-        let globalAnalyses = JSON.parse(localStorage.getItem('qamqorAnalyses')) || [];
-        globalAnalyses.unshift(newAnalysis); 
-        localStorage.setItem('qamqorAnalyses', JSON.stringify(globalAnalyses));
-        
-        if (typeof showToast === 'function') showToast(translations[currentLang].saved_success || "Успешно!");
-        
-        // Разная логика возврата
-        if (isDoctor) {
-            goBack(); // Врача возвращаем на рабочий стол
-        } else {
-            renderAnalyses(); // Пациенту обновляем список
-            goBack();
+            if (response.ok) {
+                if (typeof showToast === 'function') showToast(translations[currentLang].saved_success || "Успешно!");
+                
+                if (isDoctor) {
+                    goBack();
+                } else {
+                    await initAnalyses(); // Перезагружаем анализы с сервера
+                    goBack();
+                }
+            } else {
+                alert("Ошибка при сохранении анализа");
+            }
+        } catch (error) {
+            alert("Ошибка сети");
+        } finally {
+            btn.innerHTML = originalBtnHtml;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     }
 
