@@ -6,7 +6,7 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
     <title>QamqorMed</title>
 
@@ -439,7 +439,7 @@
 
     <div id="screen-main" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-fade-in relative">
 
-        <div class="px-6 pt-12 pb-4 bg-white sticky top-0 z-20 shadow-sm transition-all duration-300" id="main-header">
+        <div class="px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-4 bg-white sticky top-0 z-20 shadow-sm transition-all duration-300" id="main-header">
 
             <div class="flex justify-between items-center mb-4">
 
@@ -474,6 +474,11 @@
         </div>
 
         <div id="main-scroll-area" class="flex-1 overflow-y-auto pb-24 scrollbar-hide">
+
+            <div id="search-overlay" class="hidden animate-fade-in px-6 mt-6 pb-6">
+            <p class="text-sm font-bold text-gray-400 mb-4" id="search-title">Результаты поиска</p>
+            <div id="search-results-list" class="flex flex-col gap-3"></div>
+            </div>
 
             <!-- HOME TAB -->
 
@@ -653,16 +658,11 @@
 
         </div>
 
-        <div class="bg-white rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] px-8 py-5 flex justify-between items-center absolute bottom-0 w-full z-30">
-
-            <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 text-primary transition-all duration-300 transform hover:-translate-y-1"><div class="w-12 h-12 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div></button>
-
+        <div class="bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)] px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-between sm:justify-center sm:gap-14 md:gap-20 items-center absolute bottom-0 w-full z-30">
+            <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 text-primary transition-all duration-300 transform hover:-translate-y-1"><div class="w-10 h-10 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div></button>
             <button onclick="switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-folder text-xl"></i></button>
-
             <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-comment-dots text-xl"></i></button>
-
             <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-user text-xl"></i></button>
-
         </div>
 
     </div>
@@ -1723,7 +1723,73 @@
 
         renderChats();
 
-        switchApptTab('upcoming'); // Init appointment tabs
+        switchApptTab('upcoming');
+
+        const mainScrollArea = document.getElementById('main-scroll-area');
+        const searchContainer = document.getElementById('search-container');
+        const headerTopRow = document.getElementById('main-header').firstElementChild;
+        const mainHeader = document.getElementById('main-header');
+
+        headerTopRow.style.transition = 'all 0.3s ease';
+        searchContainer.style.transition = 'all 0.3s ease';
+        mainHeader.style.transition = 'all 0.3s ease';
+
+        searchContainer.style.height = '48px';
+
+        let lastScrollTop = 0;
+        let isHeaderHidden = false;
+        const scrollDelta = 15; 
+
+        mainScrollArea.addEventListener('scroll', function() {
+            if (document.getElementById('tab-home').classList.contains('hidden')) return;
+
+            let scrollTop = mainScrollArea.scrollTop;
+            let scrollHeight = mainScrollArea.scrollHeight;
+            let clientHeight = mainScrollArea.clientHeight;
+            
+            // Вычисляем максимальный возможный скролл для текущего экрана
+            let maxScroll = scrollHeight - clientHeight;
+
+            // 1. Игнорируем отскоки за пределы экрана (overscroll на iOS)
+            let boundedScroll = Math.max(0, Math.min(scrollTop, maxScroll));
+
+            // 2. ЗАЩИТА ОТ БАГА ВНИЗУ: 
+            // Если мы дошли до самого низа (осталось меньше 20px), блокируем изменение 
+            // шапки, чтобы не вызывать бесконечный цикл изменения высоты.
+            if (boundedScroll >= maxScroll - 20) {
+                lastScrollTop = boundedScroll;
+                return;
+            }
+
+            if (Math.abs(lastScrollTop - boundedScroll) <= scrollDelta) return;
+
+            if (boundedScroll > lastScrollTop && boundedScroll > 60) {
+                if (!isHeaderHidden) {
+                    searchContainer.style.height = '0px';
+                    searchContainer.style.opacity = '0';
+                    searchContainer.style.pointerEvents = 'none';
+                    
+                    headerTopRow.classList.replace('mb-4', 'mb-1');
+                    mainHeader.classList.replace('pb-4', 'pb-2');
+                    
+                    isHeaderHidden = true;
+                }
+            } 
+            else if (boundedScroll < lastScrollTop) {
+                if (isHeaderHidden) {
+                    searchContainer.style.height = '48px';
+                    searchContainer.style.opacity = '1';
+                    searchContainer.style.pointerEvents = 'auto';
+                    
+                    headerTopRow.classList.replace('mb-1', 'mb-4');
+                    mainHeader.classList.replace('pb-2', 'pb-4');
+                    
+                    isHeaderHidden = false;
+                }
+            }
+            
+            lastScrollTop = boundedScroll; 
+        });
 
     });
 
@@ -2640,23 +2706,42 @@
         const savedAccount = localStorage.getItem('qamqorAccount');
 
         if (hasSession === 'active' && savedAccount) {
-            document.getElementById('screen-splash').classList.remove('hidden');
-            document.getElementById('screen-splash').style.display = 'flex';
-            setTimeout(() => {
-                document.getElementById('screen-splash').classList.add('hidden');
-                document.getElementById('screen-splash').style.display = 'none';
+            // СРАЗУ достаем пользователя
+            currentUser = JSON.parse(savedAccount);
+            updateProfileUI();
+
+            // Проверяем, показывали ли мы уже заставку в этой вкладке браузера?
+            const splashShown = sessionStorage.getItem('splashShown');
+
+            if (!splashShown) {
+                // 1. Заставку еще не показывали -> ПОКАЗЫВАЕМ
+                document.getElementById('screen-splash').classList.remove('hidden');
+                document.getElementById('screen-splash').style.display = 'flex';
                 
-                currentUser = JSON.parse(savedAccount);
-                updateProfileUI();
+                setTimeout(() => {
+                    document.getElementById('screen-splash').classList.add('hidden');
+                    document.getElementById('screen-splash').style.display = 'none';
+                    
+                    // Запоминаем, что заставка показана!
+                    sessionStorage.setItem('splashShown', 'true');
+                    
+                    navHistory = []; 
+                    if (currentUser.role === 'doctor') {
+                        goToScreen('doctor-main', false);
+                    } else {
+                        goToScreen('main', false);
+                    }
+                }, 2000);
+            } else {
+                // 2. Заставку УЖЕ показывали (человек просто обновил страницу) -> ПРОПУСКАЕМ
                 navHistory = []; 
-                
-                // ПРОФИЛЬНАЯ МАРШРУТИЗАЦИЯ (Role-Based Routing)
                 if (currentUser.role === 'doctor') {
                     goToScreen('doctor-main', false);
                 } else {
                     goToScreen('main', false);
                 }
-            }, 2000);
+            }
+
         } else {
             goToScreen('onboarding', false);
             updateOnboardingUI();
@@ -2900,7 +2985,7 @@ function savePersonalData() {
 
             const iconMap = { home: 'home', services: 'folder', chat: 'comment-dots', profile: 'user' };
 
-            if (t === 'home') navBtn.innerHTML = `<div class="w-12 h-12 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div>`;
+            if (t === 'home') navBtn.innerHTML = `<div class="w-10 h-10 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div>`;
 
             else navBtn.innerHTML = `<i class="far fa-${iconMap[t]} text-xl"></i>`;
 
@@ -2926,7 +3011,7 @@ function savePersonalData() {
 
         if (tabName === 'home') {
 
-            searchContainer.style.height = 'auto';
+            searchContainer.style.height = '48px';
 
             searchContainer.style.opacity = '1';
 
@@ -3086,7 +3171,8 @@ function savePersonalData() {
     function handleForgot(e) { e.preventDefault(); alert("✅ Инструкции отправлены на почту!"); goToScreen('login'); }
 
     function handleLogout() { 
-        localStorage.removeItem('qamqorSession'); // Удаляем только сессию!
+        localStorage.removeItem('qamqorSession'); 
+        sessionStorage.removeItem('splashShown'); // Забываем, что показывали заставку
         currentUser = null; 
         currentStep = 0; 
         goToScreen('onboarding', true, true); 
@@ -3189,57 +3275,55 @@ function savePersonalData() {
     }
 
     function filterDoctors(q) { 
-
-        document.getElementById('all-doctors-title').innerText = "Поиск: " + q;
-
-        const cards = document.querySelectorAll('#all-doctors-grid .bg-white'); 
-
-        if (q.length === 0) {
-
-            // Reset to show all
-
-            renderDoctors();
-
-            document.getElementById('all-doctors-title').innerText = "Все врачи";
-
-        } else {
-
-             const filtered = doctors.filter(d => d.name.toLowerCase().includes(q.toLowerCase()) || d.spec.toLowerCase().includes(q.toLowerCase()));
-
-             const allGrid = document.getElementById('all-doctors-grid');
-
-             const createCard = (doc) => `
-
-                <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl shadow-card border border-gray-100 flex flex-col items-center relative cursor-pointer active:scale-95 transition-transform">
-
-                    <div class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg shadow-sm border border-gray-100"><i class="fas fa-star text-yellow-400 text-[10px]"></i><span class="text-[10px] font-bold">${doc.rating}</span></div>
-
-                    <div class="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md"><img src="${doc.img}" class="w-full h-full object-cover"></div>
-
-                    <h3 class="font-bold text-sm text-gray-800 text-center">${doc.name}</h3>
-
-                    <p class="text-[11px] text-gray-400 mb-4" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
-
-                    <button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-teal-700 transition-colors"><i class="fas fa-arrow-right text-sm -rotate-45"></i></button>
-
-                </div>`;
-
-             if(allGrid) allGrid.innerHTML = filtered.length > 0 ? filtered.map(createCard).join('') : '<div class="col-span-2 text-center text-gray-400 py-10" data-key="empty">Ничего не найдено</div>';
-
-             // If we are not on all-doctors screen, go there
-
-             const visible = document.getElementById('screen-all-doctors');
-
-             if (visible.classList.contains('hidden')) {
-
-                 goToScreen('all-doctors');
-
-             }
-
-             changeLanguage(currentLang);
-
+        const overlay = document.getElementById('search-overlay');
+        const resultsList = document.getElementById('search-results-list');
+        const title = document.getElementById('search-title');
+        const tabHome = document.getElementById('tab-home');
+        
+        if (q.trim().length === 0) {
+            // Если строку очистили, прячем результаты и возвращаем главную страницу
+            overlay.classList.add('hidden');
+            tabHome.classList.remove('hidden');
+            return;
         }
 
+        // Прячем стандартную главную страницу (категории и врачей рядом)
+        tabHome.classList.add('hidden');
+        
+        // Ищем врачей по имени, специальности И городу!
+        const filtered = doctors.filter(d => 
+            d.name.toLowerCase().includes(q.toLowerCase()) || 
+            d.spec.toLowerCase().includes(q.toLowerCase()) ||
+            d.city.toLowerCase().includes(q.toLowerCase())
+        );
+
+        // Показываем наш блок с результатами
+        overlay.classList.remove('hidden');
+
+        if (filtered.length === 0) {
+            resultsList.innerHTML = `<div class="text-center text-gray-400 py-10 flex flex-col items-center"><i class="fas fa-search text-4xl mb-3 opacity-30"></i><p>Ничего не найдено</p></div>`;
+            title.innerText = "Поиск: " + q;
+            return;
+        }
+
+        title.innerText = `Найдено специалистов: ${filtered.length}`;
+
+        // Красиво выводим найденных врачей списком (как в чатах)
+        resultsList.innerHTML = filtered.map(doc => `
+            <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer active:scale-95 transition-transform">
+                <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-50 flex-shrink-0">
+                    <img src="${doc.img}" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-900 text-sm">${doc.name}</h3>
+                    <p class="text-xs text-primary font-bold mt-0.5">${doc.spec} • <span class="text-gray-500 font-medium">${doc.city}</span></p>
+                </div>
+                <div class="flex items-center gap-1 bg-gray-50 px-2.5 py-1.5 rounded-xl">
+                    <i class="fas fa-star text-yellow-400 text-[10px]"></i>
+                    <span class="text-xs font-bold text-gray-700">${doc.rating}</span>
+                </div>
+            </div>
+        `).join('');
     }
 
     function addCard() {
