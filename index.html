@@ -5,14 +5,16 @@
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
     <title>QamqorMed</title>
-
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Marck+Script&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -294,11 +296,11 @@
 
         <form onsubmit="handleLogin(event)" class="flex flex-col gap-5">
 
-            <input type="email" id="login-email" placeholder="Email" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4 transition-all" value="user123@gmail.com">
+            <input type="email" id="login-email" placeholder="Введите эл. почту" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4 transition-all">
 
             <div class="relative">
 
-                <input type="password" id="login-pass" placeholder="Password" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4 transition-all" value="Password123">
+                <input type="password" id="login-pass" placeholder="Введите пароль" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm rounded-2xl p-4 transition-all">
 
                 <button type="button" onclick="togglePass('login-pass')" class="absolute right-4 top-4 text-gray-400 hover:text-primary transition-colors"><i class="far fa-eye-slash"></i></button>
 
@@ -404,6 +406,97 @@
 
     </div>
 
+    <div id="screen-admin-main" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-fade-in relative">
+        <div class="px-6 pt-12 pb-4 bg-white sticky top-0 z-20 shadow-sm rounded-b-[2rem]">
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Панель Админа</h1>
+                    <p class="text-sm text-primary font-bold">Полный контроль</p>
+                </div>
+                <button onclick="handleLogout()" class="text-red-500 bg-red-50 w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-100 transition-colors active:scale-95">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6 flex-1 overflow-y-auto space-y-6">
+            <div class="grid grid-cols-2 gap-4 mb-2">
+                <div class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-2"><i class="fas fa-users"></i></div>
+                    <span class="text-xs text-gray-400 font-bold">Пациенты</span>
+                    <span id="stat-patients" class="text-xl font-extrabold text-gray-800">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 bg-teal-50 text-teal-500 rounded-full flex items-center justify-center mb-2"><i class="fas fa-user-md"></i></div>
+                    <span class="text-xs text-gray-400 font-bold">Врачи</span>
+                    <span id="stat-doctors" class="text-xl font-extrabold text-gray-800">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center items-center">
+                    <div class="w-10 h-10 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mb-2"><i class="fas fa-calendar-check"></i></div>
+                    <span class="text-xs text-gray-400 font-bold">Всего приёмов</span>
+                    <span id="stat-appts" class="text-xl font-extrabold text-gray-800">0</span>
+                </div>
+                <div onclick="openAdminUserModal('create')" class="bg-primary p-4 rounded-3xl shadow-glow flex flex-col justify-center items-center cursor-pointer active:scale-95 transition-all">
+                    <div class="w-10 h-10 bg-white/20 text-white rounded-full flex items-center justify-center mb-2"><i class="fas fa-plus"></i></div>
+                    <span class="text-xs text-teal-50 font-bold mt-1">Новый профиль</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-end mb-4">
+                    <h2 class="font-bold text-gray-800 text-lg">Все пользователи</h2>
+                    <input type="text" id="admin-search" oninput="searchAdminUsers(this.value)" placeholder="Поиск по ИИН или имени..." class="text-sm border border-gray-200 rounded-xl px-3 py-1 outline-none focus:border-primary w-40">
+                </div>
+                <div id="admin-users-list" class="space-y-3">
+                    <div class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-admin-user" class="hidden absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onclick="if(event.target===this)this.classList.add('hidden')">
+        <div class="bg-white w-full max-w-[480px] rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl p-6">
+            <h3 id="admin-modal-title" class="text-xl font-bold text-gray-900 mb-4">Редактировать</h3>
+            
+            <form id="admin-user-form" class="space-y-4">
+                <input type="hidden" id="admin-form-mode"> <input type="hidden" id="admin-target-iin">
+                
+                <input type="text" id="admin-name" placeholder="ФИО" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none" required>
+                <input type="email" id="admin-email" placeholder="Email" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none" required>
+                <input type="text" id="admin-iin" placeholder="ИИН" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none" required maxlength="12">
+                
+                <select id="admin-role" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none">
+                    <option value="patient">Пациент</option>
+                    <option value="doctor">Врач</option>
+                    <option value="admin">Администратор</option>
+                </select>
+
+                <div id="admin-doctor-fields" class="hidden space-y-3 border-t border-gray-100 pt-3 mt-2">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Профиль врача</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="admin-spec" placeholder="Специальность (Хирург)" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none">
+                        <input type="text" id="admin-city" placeholder="Город (Астана)" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="admin-exp" placeholder="Опыт (10 лет)" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none">
+                        <input type="number" step="0.1" id="admin-rating" placeholder="Рейтинг (5.0)" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none">
+                    </div>
+                    <input type="text" id="admin-img" placeholder="Ссылка на фото (URL)" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none">
+                    <textarea id="admin-bio" placeholder="Краткое описание (О враче)..." class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none h-20 resize-none"></textarea>
+                </div>
+                
+                <div id="admin-password-block">
+                    <input type="password" id="admin-password" placeholder="Пароль (только для новых)" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm focus:border-primary outline-none">
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('modal-admin-user').classList.add('hidden')" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200">Отмена</button>
+                    <button type="button" onclick="saveAdminUser()" class="flex-1 bg-primary text-white font-bold py-3 rounded-xl shadow-glow">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- 5. MAIN APP LAYOUT -->
 <div id="screen-doctor-main" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-fade-in relative">
         <div class="px-6 pt-12 pb-4 bg-white sticky top-0 z-20 shadow-sm rounded-b-[2rem]">
@@ -429,9 +522,11 @@
             </div>
 
             <div>
-                <h2 class="font-bold text-gray-800 text-lg mb-4">Недавние пациенты</h2>
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-center h-32 text-gray-400">
-                    <p class="text-sm font-bold">Список пока пуст</p>
+                <h2 class="font-bold text-gray-800 text-lg mb-4">Записи пациентов</h2>
+                <div id="doctor-patients-list" class="space-y-4">
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-center h-32 text-gray-400">
+                        <i class="fas fa-spinner fa-spin text-2xl text-teal-200"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -554,7 +649,7 @@
 
                     </div>
 
-                     <div onclick="goToScreen('support-chat')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                     <div onclick="openSupportChat()" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
 
                          <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-500"><i class="fas fa-headset"></i></div><span class="font-bold text-gray-800" data-key="support_chat">Чат поддержки</span></div><i class="fas fa-chevron-right text-gray-300"></i>
 
@@ -878,9 +973,35 @@
         </div>
     </div>
 
-    <div id="toast-notification" class="fixed top-12 left-1/2 transform -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm text-white px-6 py-3 rounded-2xl shadow-2xl transition-all duration-300 opacity-0 -translate-y-10 pointer-events-none z-[100] flex items-center gap-3">
-        <i class="fas fa-check-circle text-green-400 text-lg"></i>
-        <span id="toast-message" class="text-sm font-bold tracking-wide">Успешно!</span>
+    <div id="toast-notification" class="fixed top-12 left-1/2 transform -translate-x-1/2 bg-gray-900/95 backdrop-blur-md text-white px-6 py-3.5 rounded-2xl shadow-2xl transition-all duration-300 opacity-0 -translate-y-10 pointer-events-none z-[100] flex items-center gap-3 w-max max-w-[90%]">
+        <i id="toast-icon" class="fas fa-check-circle text-green-400 text-xl"></i>
+        <span id="toast-message" class="text-sm font-bold tracking-wide leading-tight">Успешно!</span>
+    </div>
+
+    <div id="screen-add-treatment" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-50 overflow-y-auto">
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
+            <h1 class="text-xl font-bold text-gray-900">Назначить лечение</h1>
+        </div>
+        
+        <div class="p-6 flex-1 flex flex-col gap-5">
+            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <label class="block text-sm font-bold text-blue-800 mb-2">ИИН пациента</label>
+                <input type="text" id="treatment-patient-iin" readonly class="w-full bg-transparent border-none text-gray-900 text-sm font-bold outline-none p-0 cursor-default">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Рецепт и рекомендации</label>
+                <textarea id="treatment-text" placeholder="Опишите план лечения, препараты и дозировки..." class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-primary h-48 resize-none"></textarea>
+            </div>
+            <input type="hidden" id="treatment-appt-id">
+        </div>
+
+        <div class="p-6 bg-white border-t border-gray-50 sticky bottom-0 max-w-[480px] w-full mx-auto">
+            <button id="save-treatment-btn" onclick="saveTreatment()" class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-glow active:scale-95 transition-transform flex justify-center items-center gap-2">
+                <i class="fas fa-check"></i> Сохранить назначение
+            </button>
+        </div>
     </div>
 
     <!-- SETTINGS -->
@@ -1112,38 +1233,12 @@
     </div>
 
     <div id="screen-notifications" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
-
         <div class="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-white z-10 border-b border-gray-50">
-
             <div class="flex items-center gap-3"><button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button><h1 class="text-2xl font-bold text-gray-900" data-key="notifications">Уведомления</h1></div>
-
             <button onclick="markAllRead()" class="text-primary text-sm font-bold" data-key="read_all">Прочитать все</button>
-
         </div>
-
-        <div class="flex-1 overflow-y-auto px-6 pb-6 space-y-3">
-
-            <div onclick="openNotifDetail(this)" class="p-4 bg-white border border-gray-100 rounded-3xl flex gap-4 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm">
-
-                <div class="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center flex-shrink-0 text-primary"><i class="far fa-calendar-check text-xl"></i></div>
-
-                <div><h3 class="font-bold text-gray-800 text-sm" data-key="notif_appt_title">Приём перенесён</h3><p class="text-xs text-gray-500 mt-1" data-key="click_details">Нажмите для деталей</p></div>
-
-                <div class="hidden detail-content"><h2 class="text-xl font-bold mb-2" data-key="notif_appt_title">Приём перенесён</h2><p data-key="notif_appt_body">Ваш приём к врачу Смиту перенесён на 15 декабря в 15:00.</p></div>
-
-            </div>
-
-             <div onclick="openNotifDetail(this)" class="p-4 bg-white border border-gray-100 rounded-3xl flex gap-4 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm">
-
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-500"><i class="fas fa-pills text-xl"></i></div>
-
-                <div><h3 class="font-bold text-gray-800 text-sm" data-key="notif_med_title">Время лекарств</h3><p class="text-xs text-gray-500 mt-1" data-key="click_details">Нажмите для деталей</p></div>
-
-                <div class="hidden detail-content"><h2 class="text-xl font-bold mb-2" data-key="notif_med_title">Время лекарств</h2><p data-key="notif_med_body">Не забудьте принять 50мг антибиотика после еды.</p></div>
-
-            </div>
-
-        </div>
+        <div class="flex-1 overflow-y-auto px-6 pb-6 space-y-3" id="notifications-list-container">
+    </div>
 
     </div>
 
@@ -1229,7 +1324,7 @@
 
     </div>
 
-    <div id="screen-support-chat" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+    <div id="screen-support-chat" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-50">
 
         <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
 
@@ -1245,7 +1340,7 @@
 
         </div>
 
-        <div class="p-4 bg-white border-t border-gray-100 flex gap-2">
+        <div class="p-4 bg-white border-t border-gray-100 flex gap-2 sticky bottom-0 pb-8 sm:pb-4">
 
             <input type="text" id="chat-input" placeholder="Сообщение..." class="flex-1 bg-gray-100 rounded-xl px-4 py-3 text-sm">
 
@@ -1423,7 +1518,7 @@
 
     // --- DATA ---
 
-    const doctors = [
+    let doctors = [
 
         // REQUESTED DOCTORS
 
@@ -1711,9 +1806,15 @@
 
         loadUserState();
 
+        // ВОССТАНАВЛИВАЕМ СОХРАНЕННЫЙ EMAIL
+        const savedEmail = localStorage.getItem('qamqorSavedEmail');
+        if (savedEmail) {
+            document.getElementById('login-email').value = savedEmail;
+        }
+
         loadThemeSettings();
 
-        renderDoctors();
+        initDoctors();
 
         renderVaccinations();
 
@@ -1793,40 +1894,36 @@
 
     });
 
+    // Универсальный генератор карточки врача
+    function generateDoctorCard(doc) {
+        return `
+            <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl shadow-card border border-gray-100 flex flex-col items-center relative cursor-pointer active:scale-95 transition-transform">
+                <div class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg shadow-sm border border-gray-100">
+                    <i class="fas fa-star text-yellow-400 text-[10px]"></i>
+                    <span class="text-[10px] font-bold">${doc.rating}</span>
+                </div>
+                <div class="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md">
+                    <img src="${doc.img}" loading="lazy" class="w-full h-full object-cover">
+                </div>
+                <h3 class="font-bold text-sm text-gray-800 text-center">${doc.name}</h3>
+                <p class="text-[11px] text-gray-400 mb-4" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
+                <button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-teal-700 transition-colors">
+                    <i class="fas fa-arrow-right text-sm -rotate-45"></i>
+                </button>
+            </div>`;
+    }
+
     function renderDoctors() {
-
         const homeGrid = document.getElementById('doctors-home-grid');
-
         const allGrid = document.getElementById('all-doctors-grid');
 
-        const createCard = (doc) => `
-
-            <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl shadow-card border border-gray-100 flex flex-col items-center relative cursor-pointer active:scale-95 transition-transform">
-
-                <div class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg shadow-sm border border-gray-100"><i class="fas fa-star text-yellow-400 text-[10px]"></i><span class="text-[10px] font-bold">${doc.rating}</span></div>
-
-                <div class="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md"><img src="${doc.img}" class="w-full h-full object-cover"></div>
-
-                <h3 class="font-bold text-sm text-gray-800 text-center">${doc.name}</h3>
-
-                <p class="text-[11px] text-gray-400 mb-4" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
-
-                <button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-teal-700 transition-colors"><i class="fas fa-arrow-right text-sm -rotate-45"></i></button>
-
-            </div>`;
-
         const nearbyIds = [1, 2, 3, 4, 5, 33];
-
         const nearbyDoctors = doctors.filter(d => nearbyIds.includes(d.id));
 
-        if(homeGrid) homeGrid.innerHTML = nearbyDoctors.map(createCard).join('');
-
-        if(allGrid) allGrid.innerHTML = doctors.map(createCard).join('');
-
-        // Re-apply translations after render
+        if(homeGrid) homeGrid.innerHTML = nearbyDoctors.map(generateDoctorCard).join('');
+        if(allGrid) allGrid.innerHTML = doctors.map(generateDoctorCard).join('');
 
         changeLanguage(currentLang);
-
     }
 
     function getKeyForSpec(spec) {
@@ -2138,7 +2235,7 @@
         const targetIIN = isDoctor ? document.getElementById('analysis-patient-iin').value : currentUser.iin;
 
         if (!targetIIN) {
-            alert("Ошибка: Невозможно сохранить анализ, так как отсутствует ИИН.");
+            showToast('Невозможно сохранить анализ: отсутствует ИИН', 'error');
             btn.innerHTML = originalBtnHtml;
             btn.classList.remove('opacity-50', 'pointer-events-none');
             return;
@@ -2169,21 +2266,35 @@
                     goBack();
                 }
             } else {
-                alert("Ошибка при сохранении анализа");
+                showToast('Ошибка при сохранении анализа', 'error');
             }
         } catch (error) {
-            alert("Ошибка сети");
+            showToast('Ошибка сети', 'error');
         } finally {
             btn.innerHTML = originalBtnHtml;
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     }
 
-    function showToast(msg) {
+    function showToast(msg, type = 'success') {
         const toast = document.getElementById('toast-notification');
-        document.getElementById('toast-message').innerText = msg;
+        const icon = document.getElementById('toast-icon');
+        const msgEl = document.getElementById('toast-message');
+
+        msgEl.innerText = msg;
+
+        // Меняем иконку и цвет в зависимости от типа (ошибка или успех)
+        if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle text-red-400 text-xl';
+        } else if (type === 'info') {
+            icon.className = 'fas fa-info-circle text-blue-400 text-xl';
+        } else {
+            icon.className = 'fas fa-check-circle text-green-400 text-xl';
+        }
+
         toast.classList.remove('opacity-0', '-translate-y-10', 'pointer-events-none');
         
+        // Автоматически скрываем через 3 секунды
         setTimeout(() => {
             toast.classList.add('opacity-0', '-translate-y-10', 'pointer-events-none');
         }, 3000);
@@ -2359,104 +2470,125 @@
 
     }
 
-    // CONFIRM BOOKING & SAVE
+    async function fetchAppointments() {
+        if (!currentUser) return;
+        try {
+            // Указываем ТВОЙ email врача!
+            const isDoctor = currentUser.role === 'doctor';
+            
+            // Если врач - просим все записи, если пациент - только его собственные
+            const payload = isDoctor 
+                ? { action: 'get_all_for_doctor' } 
+                : { action: 'get', patientIin: currentUser.iin };
 
-    function confirmBooking() {
+            const response = await fetch('/.netlify/functions/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Записываем данные с сервера, включая ИИН пациента и сообщение
+                // Записываем данные с сервера
+                myAppointments = data.appointments.map(a => ({
+                    id: a.id,
+                    patientIin: a.patient_iin,
+                    patientName: a.patient_name || 'Пациент не указал имя', // Теперь тут есть ФИО!
+                    doctorId: a.doctor_id,
+                    date: a.date,
+                    time: a.time,
+                    type: a.type,
+                    status: a.status,
+                    message: a.message,
+                    treatment: a.treatment // Загружаем назначенное лечение
+                }));
+
+                // Обновляем список на экране в зависимости от роли
+                if (isDoctor) {
+                    renderDoctorAppointments(); // Рисуем в Кабинет Врача
+                } else {
+                    const isHistory = document.getElementById('btn-appt-history').classList.contains('text-primary');
+                    switchApptTab(isHistory ? 'history' : 'upcoming'); // Рисуем в Пациента
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки записей:', error);
+            renderDynamicNotifications();
+        }
+    }
+
+    async function confirmBooking() {
         const selectedDateEl = document.querySelector('#booking-dates .border-primary');
-
         const selectedTimeEl = document.querySelector('#booking-times .border-primary');
-
         if(!selectedDateEl || !selectedTimeEl) {
-
-            alert('Пожалуйста, выберите дату и время');
-
+            showToast('Выберите дату и время приёма', 'error');
             return;
-
         }
 
         const dateOnClick = selectedDateEl.getAttribute('onclick'); 
-
         const rawDate = dateOnClick.match(/'(\d{4}-\d{2}-\d{2})'/)[1]; 
-
         const time = selectedTimeEl.innerText;
-
         const appointmentType = document.querySelector('input[name="appointment-type"]:checked')?.value;
-
         const typeText = appointmentType === 'online' ? 'Онлайн' : 'В клинике';
-
         const message = document.getElementById('booking-msg').value;
 
-        // Create Chat if message exists
+        // Анимация на кнопке
+        const btn = document.querySelector('#modal-booking button.bg-primary');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обработка...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
 
-        if (message.trim().length > 0) {
-
-            const existingChat = myChats.find(c => c.doctorId === currentDoctorId);
-
-            if (!existingChat) {
-
-                myChats.push({
-
-                    id: Date.now(),
-
+        try {
+            // Отправляем запись в базу данных Neon
+            const response = await fetch('/.netlify/functions/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'book',
+                    patientIin: currentUser.iin,
                     doctorId: currentDoctorId,
+                    date: rawDate,
+                    time: time,
+                    type: typeText,
+                    message: message
+                })
+            });
 
-                    lastMsg: message
-
-                });
-
+            if (response.ok) {
+                showToast('Запись успешно подтверждена!');
+                closeBookingModal();
+                await fetchAppointments(); // Скачиваем обновленный список с сервера
+                goToScreen('appointments', true, true); 
             } else {
-
-                existingChat.lastMsg = message;
-
+                showToast('Ошибка при записи', 'error');
             }
-
-            renderChats(); // Update chats UI
-
+        } catch(error) {
+            showToast('Ошибка соединения с сервером', 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
         }
-
-        // Add to Mock Database
-
-        myAppointments.push({
-
-            id: Date.now(),
-
-            doctorId: currentDoctorId,
-
-            date: rawDate,
-
-            time: time,
-
-            type: typeText,
-
-            status: 'upcoming'
-
-        });
-
-        alert(`✅ Запись подтверждена!\n\nДата: ${rawDate}\nВремя: ${time}\nТип: ${typeText}`);
-
-        closeBookingModal();
-
-        switchApptTab('upcoming'); // Refresh list
-
-        goToScreen('appointments', true, true); 
-
     }
 
-    function cancelAppointment(id) {
+    async function cancelAppointment(id) {
+        if (!confirm("Вы уверены, что хотите отменить приём?")) return;
 
-        const apptIndex = myAppointments.findIndex(a => a.id === id);
+        try {
+            const response = await fetch('/.netlify/functions/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'cancel', appointmentId: id })
+            });
 
-        if (apptIndex > -1) {
-
-            myAppointments[apptIndex].status = 'cancelled';
-
-            alert('Запись отменена.');
-
-            switchApptTab('upcoming'); // Refresh view
-
+            if (response.ok) {
+                showToast('Запись отменена.');
+                await fetchAppointments(); // Обновляем список с сервера
+            }
+        } catch (error) {
+            showToast('Ошибка при отмене записи', 'error');
         }
-
     }
 
     // RENDER APPOINTMENTS
@@ -2510,79 +2642,117 @@
         }
 
         listContainer.innerHTML = filtered.map(appt => {
-
             const doc = doctors.find(d => d.id === appt.doctorId) || { name: "Неизвестный врач", spec: "Специалист", img: "https://i.pravatar.cc/150" };
-
             const isOnline = appt.type === 'Онлайн';
+            
+            // --- УМНАЯ ЛОГИКА ДЛЯ ВРАЧА И ПАЦИЕНТА ---
+            const isDoctor = currentUser && currentUser.role === 'doctor';
+            
+            // Если врач: показываем ИИН пациента. Если пациент: показываем имя врача
+            const titleName = isDoctor ? `Пациент (ИИН: ${appt.patientIin || 'Неизвестно'})` : doc.name;
+            const subTitle = isDoctor ? `Жалоба: ${appt.message || 'Нет комментариев'}` : doc.spec;
+            
+            // Для пациента генерируем уникальную аватарку по его ИИН
+            const photoUrl = isDoctor ? `https://i.pravatar.cc/150?u=${appt.patientIin || appt.id}` : doc.img; 
 
             // Dynamic Buttons based on tab and status
-
             let actionButtons = '';
-
             let statusBadge = '';
 
-            if (tab === 'upcoming') {
-
+            if (tab === 'upcoming' && !appt.treatment) {
                 const btnAction = isOnline 
-
                     ? `<button class="flex-1 bg-primary text-white py-3 rounded-xl font-bold shadow-sm active:scale-95 transition-transform" data-key="enter_call">Войти в звонок</button>` 
-
                     : `<button class="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold shadow-sm" disabled data-key="in_clinic">В клинике</button>`;
-
+                
                 const btnCancel = `<button onclick="cancelAppointment(${appt.id})" class="w-12 flex items-center justify-center bg-red-50 text-red-500 rounded-xl font-bold shadow-sm active:scale-95 transition-transform"><i class="fas fa-times"></i></button>`;
-
                 actionButtons = `<div class="flex gap-2">${btnAction}${btnCancel}</div>`;
-
             } else {
-
-                // History
-
                 if (appt.status === 'cancelled') {
-
                     statusBadge = `<div class="text-center text-sm text-red-500 font-bold bg-red-50 py-2 rounded-xl" data-key="cancelled">Отменён</div>`;
-
+                } else if (appt.treatment) {
+                    // ЕСЛИ ВРАЧ НАЗНАЧИЛ ЛЕЧЕНИЕ - ПОКАЗЫВАЕМ ЕГО
+                    statusBadge = `
+                        <div class="mt-3 bg-teal-50 p-4 rounded-2xl border border-teal-100">
+                            <p class="text-xs text-teal-600 font-bold mb-1"><i class="fas fa-user-md"></i> Назначение врача:</p>
+                            <p class="text-sm text-gray-800 font-medium whitespace-pre-wrap">${appt.treatment}</p>
+                        </div>
+                    `;
                 } else {
-
                     statusBadge = `<div class="text-center text-sm text-gray-400 font-bold bg-gray-50 py-2 rounded-xl" data-key="completed">Завершен</div>`;
-
                 }
-
             }
 
             return `
-
             <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative">
-
                 <div class="flex justify-between mb-3">
-
                     <span class="font-bold text-primary text-sm flex items-center gap-2"><i class="far fa-calendar-alt"></i> ${appt.date}, ${appt.time}</span>
-
                     <span class="bg-gray-50 text-xs px-2 py-1 rounded-lg text-gray-600 font-bold shadow-sm border border-gray-100">${appt.type === 'Онлайн' ? 'Online' : 'Offline'}</span>
-
                 </div>
-
                 <div class="flex gap-4 mb-4">
-
-                    <div class="w-12 h-12 rounded-xl overflow-hidden"><img src="${doc.img}" class="w-full h-full object-cover"></div>
-
-                    <div>
-
-                        <h3 class="font-bold text-lg text-gray-900 leading-tight">${doc.name}</h3>
-
-                        <p class="text-sm text-gray-500" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
-
+                    <div class="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0"><img src="${photoUrl}" class="w-full h-full object-cover"></div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg text-gray-900 leading-tight">${titleName}</h3>
+                        <p class="text-sm ${isDoctor ? 'text-blue-500 font-medium' : 'text-gray-500'}" ${!isDoctor ? `data-key="${getKeyForSpec(doc.spec)}"` : ''}>${subTitle}</p>
                     </div>
-
                 </div>
-
                 ${tab === 'upcoming' ? actionButtons : statusBadge}
-
             </div>`;
-
         }).join('');
 
         changeLanguage(currentLang);
 
+    }
+
+    function renderDoctorAppointments() {
+        const container = document.getElementById('doctor-patients-list');
+        if (!container) return;
+
+        const activeAppts = myAppointments.filter(a => a.status !== 'cancelled');
+
+        if (activeAppts.length === 0) {
+            container.innerHTML = `
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-32 text-gray-400">
+                <i class="far fa-calendar-times text-3xl mb-2 opacity-50"></i>
+                <p class="text-sm font-bold">Пока нет записей</p>
+            </div>`;
+            return;
+        }
+
+        container.innerHTML = activeAppts.map(appt => {
+            return `
+            <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative transition-all hover:shadow-md">
+                <div class="flex justify-between mb-4 border-b border-gray-50 pb-3">
+                    <span class="font-bold text-primary text-sm flex items-center gap-2">
+                        <i class="far fa-calendar-alt"></i> ${appt.date}, ${appt.time}
+                    </span>
+                    <span class="bg-blue-50 text-blue-600 border border-blue-100 text-xs px-2 py-1 rounded-lg font-bold shadow-sm">
+                        ${appt.type}
+                    </span>
+                </div>
+                
+                <div class="mb-5">
+                    <h3 class="font-bold text-xl text-gray-900 leading-tight mb-1">${appt.patientName}</h3>
+                    <p class="text-sm text-gray-500 font-medium">ИИН: ${appt.patientIin}</p>
+                    <div class="mt-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                        <p class="text-xs text-gray-400 font-bold mb-1">Жалоба пациента:</p>
+                        <p class="text-sm text-gray-900 font-medium">${appt.message || 'Нет комментариев'}</p>
+                    </div>
+                </div>
+                
+                ${appt.treatment ? `
+                    <div class="mb-2 bg-green-50 p-3 rounded-xl border border-green-100">
+                        <p class="text-xs text-green-600 font-bold mb-1"><i class="fas fa-check-circle"></i> Лечение назначено</p>
+                        <p class="text-sm text-gray-800">${appt.treatment}</p>
+                    </div>
+                ` : `
+                    <div class="flex gap-2">
+                        <button onclick="openAddTreatment(${appt.id}, '${appt.patientIin}')" class="flex-1 bg-primary/10 text-primary py-3 rounded-xl font-bold shadow-sm active:scale-95 transition-transform text-sm">
+                            <i class="fas fa-pills mr-1"></i> Назначить лечение
+                        </button>
+                    </div>
+                `}
+            </div>`;
+        }).join('');
     }
 
     function renderChats() {
@@ -2595,7 +2765,7 @@
 
         let html = `
 
-        <div onclick="goToScreen('support-chat')" class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors">
+        <div onclick="openSupportChat()" class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors">
 
             <div class="w-12 h-12 rounded-full bg-teal-50 flex items-center justify-center text-primary"><i class="fas fa-headset text-xl"></i></div>
 
@@ -2666,39 +2836,17 @@
     }
 
     function filterByCategory(category) {
-
         document.getElementById('all-doctors-title').innerText = category;
-
         const filtered = doctors.filter(d => d.spec === category);
-
         const allGrid = document.getElementById('all-doctors-grid');
 
         if(allGrid) {
-
-            const createCard = (doc) => `
-
-                <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl shadow-card border border-gray-100 flex flex-col items-center relative cursor-pointer active:scale-95 transition-transform">
-
-                    <div class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg shadow-sm border border-gray-100"><i class="fas fa-star text-yellow-400 text-[10px]"></i><span class="text-[10px] font-bold">${doc.rating}</span></div>
-
-                    <div class="w-24 h-24 rounded-full overflow-hidden mb-3 border-4 border-white shadow-md"><img src="${doc.img}" class="w-full h-full object-cover"></div>
-
-                    <h3 class="font-bold text-sm text-gray-800 text-center">${doc.name}</h3>
-
-                    <p class="text-[11px] text-gray-400 mb-4" data-key="${getKeyForSpec(doc.spec)}">${doc.spec}</p>
-
-                    <button class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-teal-700 transition-colors"><i class="fas fa-arrow-right text-sm -rotate-45"></i></button>
-
-                </div>`;
-
-            allGrid.innerHTML = filtered.length > 0 ? filtered.map(createCard).join('') : '<div class="col-span-2 text-center text-gray-400 py-10" data-key="empty">Ничего не найдено</div>';
-
+            allGrid.innerHTML = filtered.length > 0 
+                ? filtered.map(generateDoctorCard).join('') 
+                : '<div class="col-span-2 text-center text-gray-400 py-10" data-key="empty">Ничего не найдено</div>';
         }
-
         goToScreen('all-doctors');
-
         changeLanguage(currentLang);
-
     }
 
    function loadUserState() {
@@ -2709,6 +2857,8 @@
             // СРАЗУ достаем пользователя
             currentUser = JSON.parse(savedAccount);
             updateProfileUI();
+            fetchAppointments();
+            renderDynamicNotifications();
 
             // Проверяем, показывали ли мы уже заставку в этой вкладке браузера?
             const splashShown = sessionStorage.getItem('splashShown');
@@ -2726,7 +2876,10 @@
                     sessionStorage.setItem('splashShown', 'true');
                     
                     navHistory = []; 
-                    if (currentUser.role === 'doctor') {
+                    if (currentUser.role === 'admin') {
+                        goToScreen('admin-main', false);
+                        fetchAdminUsers(); // Загружаем список
+                    } else if (currentUser.role === 'doctor') {
                         goToScreen('doctor-main', false);
                     } else {
                         goToScreen('main', false);
@@ -2735,16 +2888,20 @@
             } else {
                 // 2. Заставку УЖЕ показывали (человек просто обновил страницу) -> ПРОПУСКАЕМ
                 navHistory = []; 
-                if (currentUser.role === 'doctor') {
-                    goToScreen('doctor-main', false);
-                } else {
-                    goToScreen('main', false);
-                }
+                    if (currentUser.role === 'admin') {
+                        goToScreen('admin-main', false);
+                        fetchAdminUsers(); // Загружаем список
+                    } else if (currentUser.role === 'doctor') {
+                        goToScreen('doctor-main', false);
+                    } else {
+                        goToScreen('main', false);
+                    }
             }
 
         } else {
             goToScreen('onboarding', false);
             updateOnboardingUI();
+            renderDynamicNotifications();
         }
     }
 
@@ -2778,37 +2935,53 @@
         }
     }
 
-function savePersonalData() {
+    async function savePersonalData() {
         if (!currentUser) return;
         
         const newEmail = document.getElementById('pd-email-input').value.trim();
         const newBlood = document.getElementById('pd-blood-select').value;
 
-        // Простая проверка email
         if (!newEmail.includes('@') || !newEmail.includes('.')) {
-            alert('Пожалуйста, введите корректный Email.');
+            showToast('Пожалуйста, введите корректный Email', 'error');
             return;
         }
 
-        // Обновляем данные пользователя
-        currentUser.email = newEmail;
-        currentUser.bloodType = newBlood;
+        const btn = document.querySelector('#screen-personal-data button.bg-primary');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
 
-        // Сохраняем в базу (localStorage)
-        localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
-        
-        // Обновляем интерфейс
-        updateProfileUI(); 
-        
-        // Показываем красивое уведомление (которое мы делали для анализов)
-        if (typeof showToast === "function") {
-            showToast(translations[currentLang].saved_success || "Успешно сохранено!");
-        } else {
-            alert("Данные успешно сохранены!");
+        try {
+            const response = await fetch('/.netlify/functions/update-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'update_profile',
+                    iin: currentUser.iin,
+                    email: newEmail,
+                    bloodType: newBlood
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                currentUser.email = newEmail;
+                currentUser.bloodType = newBlood;
+                localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
+                
+                updateProfileUI(); 
+                showToast(result.message);
+                goBack();
+            } else {
+                showToast(result.error, 'error');
+            }
+        } catch (error) {
+            showToast('Ошибка соединения с сервером', 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
         }
-        
-        // Возвращаемся в профиль
-        goBack();
     }
 
     function changeLanguage(lang) {
@@ -3101,22 +3274,25 @@ function savePersonalData() {
                 currentUser = data.user;
                 localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
                 localStorage.setItem('qamqorSession', 'active');
+                localStorage.setItem('qamqorSavedEmail', email);
                 
                 // Возвращаем кнопку в норму и запускаем приложение
                 btnText.classList.remove('hidden');
                 loader.classList.add('hidden');
                 btn.classList.remove('opacity-50', 'pointer-events-none');
                 
+                document.getElementById('login-pass').value = ''; // Очищаем пароль
+
                 loadUserState(); 
             } else {
                 // Ошибка (неверный пароль)
-                alert('❌ ' + data.error);
+                showToast('Пожалуйста, введите корректный Email', 'error');
                 btnText.classList.remove('hidden');
                 loader.classList.add('hidden');
                 btn.classList.remove('opacity-50', 'pointer-events-none');
             }
         } catch (error) {
-            alert('❌ Ошибка соединения с сервером.');
+            showToast('Ошибка соединения с сервером', 'error');
             btnText.classList.remove('hidden');
             loader.classList.add('hidden');
             btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -3153,22 +3329,23 @@ function savePersonalData() {
                 // Успех! Пользователь в базе данных.
                 // Сохраняем сессию локально, чтобы человек сразу вошел в приложение
                 saveUser(name, email, password, iin); 
+                document.getElementById('reg-pass').value = ''; // Очищаем пароль
                 loadUserState();
             } else {
                 // Ошибка от сервера (например, такой Email или ИИН уже зарегистрирован)
-                alert('❌ ' + data.error);
+                showToast('Пожалуйста, введите корректный Email', 'error');
                 btn.innerHTML = originalText;
                 btn.classList.remove('opacity-50', 'pointer-events-none');
             }
         } catch (error) {
             // Ошибка интернета или сети
-            alert('❌ Ошибка соединения с сервером.');
+            showToast('Ошибка соединения с сервером', 'error');
             btn.innerHTML = originalText;
             btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     }
 
-    function handleForgot(e) { e.preventDefault(); alert("✅ Инструкции отправлены на почту!"); goToScreen('login'); }
+    function handleForgot(e) { e.preventDefault(); showToast('Инструкции отправлены на почту!'); goToScreen('login'); }
 
     function handleLogout() { 
         localStorage.removeItem('qamqorSession'); 
@@ -3179,33 +3356,60 @@ function savePersonalData() {
         updateOnboardingUI(); 
     }
 
-    function handleChangePassword(e) {
+    async function handleChangePassword(e) {
         e.preventDefault();
         const oldPass = document.getElementById('old-pass').value;
         const newPass = document.getElementById('new-pass').value;
         const confirmPass = document.getElementById('confirm-pass').value;
         
-        if (!currentUser || currentUser.password !== oldPass) {
-             alert('❌ Старый пароль неверен!');
-             return;
-        }
+        if (!currentUser) return;
+        
         if(newPass !== confirmPass) {
-            alert('❌ Пароли не совпадают!');
+            showToast('Пароли не совпадают!', 'error');
             return;
         }
         if(newPass.length < 8) {
-            alert('❌ Пароль должен быть минимум 8 символов!');
+            showToast('Пароль должен быть минимум 8 символов!', 'error');
             return;
         }
-        
-        currentUser.password = newPass;
-        localStorage.setItem('qamqorAccount', JSON.stringify(currentUser)); // Сохраняем в новую БД
-        
-        alert('✅ Пароль успешно изменён!');
-        document.getElementById('old-pass').value = '';
-        document.getElementById('new-pass').value = '';
-        document.getElementById('confirm-pass').value = '';
-        goToScreen('settings');
+
+        const btn = document.querySelector('#screen-privacy button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const response = await fetch('/.netlify/functions/update-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'change_password',
+                    iin: currentUser.iin,
+                    oldPassword: oldPass,
+                    newPassword: newPass
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                currentUser.password = newPass;
+                localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
+                
+                showToast(result.message);
+                document.getElementById('old-pass').value = '';
+                document.getElementById('new-pass').value = '';
+                document.getElementById('confirm-pass').value = '';
+                goToScreen('settings');
+            } else {
+                showToast(result.error, 'error'); 
+            }
+        } catch (error) {
+            showToast('Ошибка сети', 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
     }
 
     function markAllRead() { document.getElementById('notif-dot').classList.add('hidden'); }
@@ -3312,7 +3516,7 @@ function savePersonalData() {
         resultsList.innerHTML = filtered.map(doc => `
             <div onclick="openDoctorDetail(${doc.id})" class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer active:scale-95 transition-transform">
                 <div class="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-50 flex-shrink-0">
-                    <img src="${doc.img}" class="w-full h-full object-cover">
+                    <img src="${doc.img}" loading="lazy" class="w-full h-full object-cover">
                 </div>
                 <div class="flex-1">
                     <h3 class="font-bold text-gray-900 text-sm">${doc.name}</h3>
@@ -3520,6 +3724,409 @@ function savePersonalData() {
 
         }, 1000);
 
+    }
+
+    // Открытие окна назначения
+    function openAddTreatment(apptId, patientIin) {
+        document.getElementById('treatment-appt-id').value = apptId;
+        document.getElementById('treatment-patient-iin').value = patientIin;
+        document.getElementById('treatment-text').value = '';
+        goToScreen('add-treatment');
+    }
+
+    // Сохранение лечения и отправка уведомления
+    async function saveTreatment() {
+        const apptId = document.getElementById('treatment-appt-id').value;
+        const patientIin = document.getElementById('treatment-patient-iin').value;
+        const text = document.getElementById('treatment-text').value.trim();
+        const btn = document.getElementById('save-treatment-btn');
+
+        if(!text) { showToast('Пожалуйста, напишите рецепт или рекомендации', 'error'); return; }
+
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const response = await fetch('/.netlify/functions/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add_treatment', appointmentId: apptId, treatment: text })
+            });
+
+            if (response.ok) {
+                // СОЗДАЕМ УВЕДОМЛЕНИЕ ДЛЯ ПАЦИЕНТА (сохраняем локально по его ИИН)
+                let notifs = JSON.parse(localStorage.getItem('qamqorNotifs_' + patientIin) || '[]');
+                notifs.push({
+                    title: 'Вам назначено лечение 💊',
+                    body: 'Врач выписал вам новое назначение. Откройте "Мои приёмы", чтобы посмотреть детали.',
+                    isRead: false
+                });
+                localStorage.setItem('qamqorNotifs_' + patientIin, JSON.stringify(notifs));
+
+                if (typeof showToast === 'function') showToast('Лечение успешно назначено!');
+                await fetchAppointments(); // Обновляем список записей
+                goBack();
+            } else {
+                showToast('Ошибка сохранения', 'error');
+            }
+        } catch (error) {
+            showToast('Ошибка сети', 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    // Динамическая отрисовка уведомлений пациента
+    function renderDynamicNotifications() {
+        if (!currentUser) return;
+        const list = document.getElementById('notifications-list-container');
+        if (!list) return;
+
+        let notifs = JSON.parse(localStorage.getItem('qamqorNotifs_' + currentUser.iin) || '[]');
+        const unread = notifs.some(n => !n.isRead);
+        
+        // Включаем/выключаем красную точку
+        const dot = document.getElementById('notif-dot');
+        if (unread && dot) dot.classList.remove('hidden');
+        else if (dot) dot.classList.add('hidden');
+
+        if (notifs.length === 0) {
+            list.innerHTML = `<div class="flex flex-col items-center justify-center mt-20 text-gray-400"><i class="far fa-bell-slash text-5xl mb-4 text-gray-200"></i><p class="font-bold">Нет новых уведомлений</p></div>`;
+            return;
+        }
+
+        list.innerHTML = notifs.reverse().map(n => `
+            <div class="p-4 bg-white border ${n.isRead ? 'border-gray-100' : 'border-primary shadow-md'} rounded-3xl flex gap-4 transition-all mb-3">
+                <div class="w-12 h-12 rounded-2xl ${n.isRead ? 'bg-gray-50 text-gray-400' : 'bg-teal-50 text-primary'} flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-pills text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800 text-sm">${n.title}</h3>
+                    <p class="text-xs text-gray-500 mt-1">${n.body}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Переписываем функцию отметки прочитанным
+    function markAllRead() {
+        if(!currentUser) return;
+        let notifs = JSON.parse(localStorage.getItem('qamqorNotifs_' + currentUser.iin) || '[]');
+        notifs.forEach(n => n.isRead = true);
+        localStorage.setItem('qamqorNotifs_' + currentUser.iin, JSON.stringify(notifs));
+        renderDynamicNotifications();
+    }
+
+    // --- ADMIN PANEL FUNCTIONS ---
+    let allSystemUsers = [];
+
+    async function fetchAdminUsers() {
+        if (!currentUser || currentUser.role !== 'admin') return;
+        try {
+            const response = await fetch('/.netlify/functions/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_all', adminEmail: currentUser.email })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                allSystemUsers = data.users;
+                
+                // Считаем статистику по ролям
+                const patientsCount = allSystemUsers.filter(u => u.role === 'patient').length;
+                const doctorsCount = allSystemUsers.filter(u => u.role === 'doctor').length;
+                
+                // Вставляем цифры в HTML
+                document.getElementById('stat-patients').innerText = patientsCount;
+                document.getElementById('stat-doctors').innerText = doctorsCount;
+                document.getElementById('stat-appts').innerText = data.totalAppointments || 0;
+
+                // Рисуем список пользователей
+                renderAdminUsers(allSystemUsers);
+            }
+        } catch (e) {
+            showToast("Ошибка загрузки пользователей", "error");
+        }
+    }
+
+    function renderAdminUsers(usersArray) {
+        const list = document.getElementById('admin-users-list');
+        if (usersArray.length === 0) {
+            list.innerHTML = `<div class="text-center py-5 text-gray-400">Пользователи не найдены</div>`;
+            return;
+        }
+
+        list.innerHTML = usersArray.map(u => {
+            const roleColor = u.role === 'admin' ? 'bg-purple-100 text-purple-600' : (u.role === 'doctor' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600');
+            const roleName = u.role === 'admin' ? 'Админ' : (u.role === 'doctor' ? 'Врач' : 'Пациент');
+            
+            return `
+            <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-gray-900 text-sm truncate">${u.name}</h4>
+                    <p class="text-xs text-gray-500">${u.iin} • ${u.email}</p>
+                </div>
+                <span class="${roleColor} text-[10px] font-bold px-2 py-1 rounded-lg uppercase">${roleName}</span>
+                <button onclick="openAdminUserModal('edit', '${u.iin}')" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:text-primary hover:bg-teal-50 flex items-center justify-center transition-colors">
+                    <i class="fas fa-pen text-xs"></i>
+                </button>
+                <button onclick="deleteAdminUser('${u.iin}', '${u.name}')" class="w-8 h-8 rounded-full bg-red-50 text-red-400 hover:text-red-600 hover:bg-red-100 flex items-center justify-center transition-colors">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
+            </div>`;
+        }).join('');
+    }
+
+    function searchAdminUsers(query) {
+        const q = query.toLowerCase();
+        const filtered = allSystemUsers.filter(u => 
+            u.name.toLowerCase().includes(q) || u.iin.includes(q) || u.email.toLowerCase().includes(q)
+        );
+        renderAdminUsers(filtered);
+    }
+
+    function openAdminUserModal(mode, iin = null) {
+        const modal = document.getElementById('modal-admin-user');
+        const title = document.getElementById('admin-modal-title');
+        const passBlock = document.getElementById('admin-password-block');
+        
+        document.getElementById('admin-form-mode').value = mode;
+        
+        // Очищаем все поля по умолчанию
+        document.getElementById('admin-user-form').reset();
+        
+        if (mode === 'create') {
+            title.innerText = "Создать пользователя";
+            passBlock.classList.remove('hidden');
+            document.getElementById('admin-iin').readOnly = false;
+        } else {
+            title.innerText = "Редактировать пользователя";
+            passBlock.classList.add('hidden'); // Пароль не редактируем
+            document.getElementById('admin-iin').readOnly = true; 
+            
+            const user = allSystemUsers.find(u => u.iin === iin);
+            if (user) {
+                document.getElementById('admin-target-iin').value = user.iin;
+                document.getElementById('admin-name').value = user.name;
+                document.getElementById('admin-email').value = user.email;
+                document.getElementById('admin-iin').value = user.iin;
+                document.getElementById('admin-role').value = user.role;
+                
+                // Заполняем поля врача (если есть)
+                document.getElementById('admin-spec').value = user.spec || '';
+                document.getElementById('admin-city').value = user.city || '';
+                document.getElementById('admin-exp').value = user.exp || '';
+                document.getElementById('admin-rating').value = user.rating || '';
+                document.getElementById('admin-img').value = user.img || '';
+                document.getElementById('admin-bio').value = user.bio || '';
+            }
+        }
+        
+        // Искусственно вызываем событие 'change', чтобы показать или скрыть блок врача
+        document.getElementById('admin-role').dispatchEvent(new Event('change'));
+        
+        modal.classList.remove('hidden');
+    }
+
+    async function saveAdminUser() {
+        const mode = document.getElementById('admin-form-mode').value;
+        const targetIin = document.getElementById('admin-target-iin').value;
+        
+        const payload = {
+            action: mode,
+            adminEmail: currentUser.email,
+            name: document.getElementById('admin-name').value,
+            email: document.getElementById('admin-email').value,
+            iin: document.getElementById('admin-iin').value,
+            role: document.getElementById('admin-role').value,
+            targetIin: targetIin,
+            spec: document.getElementById('admin-spec').value,
+            city: document.getElementById('admin-city').value,
+            exp: document.getElementById('admin-exp').value,
+            rating: parseFloat(document.getElementById('admin-rating').value) || 5.0,
+            img: document.getElementById('admin-img').value,
+            bio: document.getElementById('admin-bio').value
+        };
+
+        if (mode === 'create') {
+            payload.password = document.getElementById('admin-password').value;
+            if (!payload.password || payload.password.length < 8) {
+                showToast("Пароль должен быть минимум 8 символов", "error");
+                return;
+            }
+        }
+
+        try {
+            const response = await fetch('/.netlify/functions/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast(data.message);
+                document.getElementById('modal-admin-user').classList.add('hidden');
+                fetchAdminUsers(); // Обновляем список
+            } else {
+                showToast(data.error, "error");
+            }
+        } catch (e) {
+            showToast("Ошибка сети", "error");
+        }
+    }
+
+    async function deleteAdminUser(iin, name) {
+        if (iin === currentUser.iin) {
+            showToast("Вы не можете удалить сами себя!", "error");
+            return;
+        }
+        if (!confirm(`Вы точно хотите удалить пользователя ${name} (ИИН: ${iin})? Это действие нельзя отменить.`)) return;
+
+        try {
+            const response = await fetch('/.netlify/functions/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', adminEmail: currentUser.email, targetIin: iin })
+            });
+            
+            if (response.ok) {
+                showToast("Пользователь удален");
+                fetchAdminUsers();
+            } else {
+                const data = await response.json();
+                showToast(data.error, "error");
+            }
+        } catch (e) {
+            showToast("Ошибка сети", "error");
+        }
+    }
+
+    async function initDoctors() {
+        try {
+            const response = await fetch('/.netlify/functions/get-doctors');
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Превращаем данные из базы в правильный формат для карточек
+                const dbDoctors = data.doctors.map((d, index) => ({
+                    id: d.id || (1000 + index), // Если в БД нет id, даем уникальный номер
+                    name: d.name,
+                    spec: d.spec || 'Терапевт',
+                    exp: d.exp || '5 лет',
+                    rating: parseFloat(d.rating) || 5.0,
+                    img: d.img || `https://i.pravatar.cc/150?u=${d.iin}`, // Уникальная аватарка по ИИН
+                    city: d.city || 'Астана',
+                    bio: d.bio || 'Новый врач нашей клиники.'
+                }));
+                
+                // Объединяем жестко прописанных врачей с теми, что созданы в базе
+                doctors = [...doctors, ...dbDoctors];
+            }
+        } catch (e) {
+            console.error("Ошибка загрузки врачей с сервера:", e);
+        }
+
+            // Показываем поля врача только если выбрана роль "doctor"
+        document.getElementById('admin-role').addEventListener('change', function() {
+            const docFields = document.getElementById('admin-doctor-fields');
+            if(this.value === 'doctor') {
+                docFields.classList.remove('hidden');
+            } else {
+                docFields.classList.add('hidden');
+            }
+        });
+        
+        // Только после скачивания рисуем их на экране!
+        renderDoctors(); 
+    }
+
+    // --- ЭКОНОМНЫЙ ЧАТ С ИИ ---
+    let currentChatReceiver = null;
+
+    function openSupportChat() {
+        currentChatReceiver = 'support';
+        document.getElementById('chat-title').innerText = "Поддержка";
+        document.getElementById('chat-messages').innerHTML = `<div class="text-center text-gray-400 mt-10"><i class="fas fa-spinner fa-spin"></i> Загрузка истории...</div>`;
+        goToScreen('support-chat');
+        fetchChatHistory(); // Загружаем историю ровно 1 раз
+    }
+
+    async function fetchChatHistory() {
+        if (!currentUser || !currentChatReceiver) return;
+        try {
+            const response = await fetch('/.netlify/functions/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get', sender: currentUser.iin, receiver: currentChatReceiver })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                renderChatMessages(data.messages);
+            }
+        } catch (e) {
+            console.error("Ошибка загрузки чата", e);
+        }
+    }
+
+    function renderChatMessages(messages) {
+        const container = document.getElementById('chat-messages');
+        if (messages.length === 0) {
+            container.innerHTML = `<div class="text-center text-gray-400 text-sm mt-10">Здесь пока пусто. Напишите первое сообщение!</div>`;
+            return;
+        }
+
+        container.innerHTML = messages.map(msg => {
+            if (msg.sender === currentUser.iin) {
+                return `<div class="flex justify-end animate-fade-in"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${msg.text}</div></div>`;
+            } else {
+                return `<div class="flex justify-start animate-fade-in"><div class="bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">${msg.text}</div></div>`;
+            }
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text || !currentUser || !currentChatReceiver) return;
+
+        const container = document.getElementById('chat-messages');
+        
+        // Рисуем сообщение пользователя
+        container.innerHTML += `<div class="flex justify-end animate-fade-in"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${text}</div></div>`;
+        
+        // Рисуем индикатор "ИИ печатает..."
+        const loadingId = 'loading-' + Date.now();
+        container.innerHTML += `<div id="${loadingId}" class="flex justify-start animate-fade-in"><div class="bg-gray-100 text-gray-500 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2 flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> Поддержка печатает...</div></div>`;
+        
+        input.value = '';
+        container.scrollTop = container.scrollHeight;
+
+        try {
+            const response = await fetch('/.netlify/functions/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'send', sender: currentUser.iin, receiver: currentChatReceiver, text: text })
+            });
+            
+            const data = await response.json();
+            
+            // Удаляем индикатор загрузки
+            document.getElementById(loadingId).remove();
+
+            if (response.ok && data.reply) {
+                // Рисуем ответ от ИИ
+                container.innerHTML += `<div class="flex justify-start animate-fade-in"><div class="bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">${data.reply}</div></div>`;
+                container.scrollTop = container.scrollHeight;
+            }
+        } catch (e) {
+            document.getElementById(loadingId).remove();
+            showToast("Ошибка отправки", "error");
+        }
     }
 
 </script>
