@@ -27,7 +27,7 @@ export default async function handler(request, context) {
             let replyText = "";
 
             if (receiver === 'support') {
-                const apiKey = "AIzaSyALrrzIMza7SORaZ5DtqcQTDrdEf_PVlCI";
+                const apiKey = process.env.GEMINI_API_KEY;
                 
                 if (apiKey) {
                     try {
