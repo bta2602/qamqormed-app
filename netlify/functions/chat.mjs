@@ -19,9 +19,8 @@ export default async function handler(request, context) {
             );
         `;
 
-        // 1. ОТПРАВКА СООБЩЕНИЯ И МГНОВЕННЫЙ ОТВЕТ ИИ
+        // 1. ОТПРАВКА СООБЩЕНИЯ
         if (action === 'send') {
-            // Сохраняем вопрос пациента
             await sql`INSERT INTO chat_messages (sender, receiver, text) VALUES (${sender}, ${receiver}, ${text})`;
 
             let replyText = "";
@@ -29,42 +28,81 @@ export default async function handler(request, context) {
             if (receiver === 'support') {
                 const apiKey = process.env.GEMINI_API_KEY;
                 
-                if (apiKey) {
+                if (!apiKey) {
+                    replyText = "Автоответчик: Система ИИ не подключена (нужен API ключ в настройках Netlify).";
+                } else {
+                    const systemPrompt = `
+Ты — умный ИИ-ассистент клиники QamqorMed. 
+Твоя цель: общаться с пациентом и, если он хочет записаться к врачу, собрать 3 параметра: специальность врача, дату и время.
+Если пациент не назвал все три параметра — вежливо уточни их.
+Если пациент назвал всё и подтверждает запись — ставь флаг makeBooking: true.
+
+ВНИМАНИЕ! Твой ответ ВСЕГДА должен быть строгим JSON-объектом такого формата:
+{
+  "replyText": "Твой ответ пациенту (человеческим языком)",
+  "makeBooking": false,
+  "bookingData": {
+      "spec": "название специальности врача (если есть)",
+      "date": "дата приема (если есть)",
+      "time": "время приема (если есть)"
+  }
+}
+Отвечай ТОЛЬКО форматом JSON, без лишнего текста и без кавычек markdown.
+Вопрос от пациента: "${text}"
+                    `;
+
                     try {
-                        const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                        const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ parts: [{ text: `Ты медицинский ассистент клиники QamqorMed. Отвечай кратко, эмпатично. Клиент пишет: "${text}"` }] }]
+                                contents: [{ parts: [{ text: systemPrompt }] }],
+                                generationConfig: { responseMimeType: "application/json" }
                             })
                         });
                         
                         const aiData = await aiResponse.json();
-                        
-                        // Если Google вернул ошибку, выводим её прямо в чат
+
+                        // ЗАЩИТА ОТ ОШИБОК API
                         if (!aiResponse.ok) {
-                            replyText = `Ошибка API (${aiResponse.status}): ${aiData.error?.message || 'Неизвестная ошибка'}`;
-                            console.error("Gemini API Error:", aiData);
+                            replyText = `Ошибка ИИ: ${aiData.error?.message || 'Неизвестная ошибка'}`;
                         } else {
-                            replyText = aiData.candidates[0].content.parts[0].text;
+                            const aiJsonStr = aiData.candidates[0].content.parts[0].text;
+                            const parsedAI = JSON.parse(aiJsonStr);
+                            replyText = parsedAI.replyText;
+
+                            // МАГИЯ: ЕСЛИ ИИ РЕШИЛ ЗАПИСАТЬ ПАЦИЕНТА
+                            if (parsedAI.makeBooking === true && parsedAI.bookingData) {
+                                const bData = parsedAI.bookingData;
+                                // Ищем врача нужной специальности
+                                const doctors = await sql`SELECT iin, name FROM users WHERE role = 'doctor' AND spec ILIKE ${'%' + bData.spec + '%'} LIMIT 1`;
+                                
+                                if (doctors.length > 0) {
+                                    const doctor = doctors[0];
+                                    await sql`
+                                        INSERT INTO appointments (patient_iin, doctor_iin, date, time, status) 
+                                        VALUES (${sender}, ${doctor.iin}, ${bData.date}, ${bData.time}, 'pending')
+                                    `;
+                                    replyText += `\n\n✅ *Система: Вы успешно записаны к врачу ${doctor.name} на ${bData.date} в ${bData.time}.*`;
+                                } else {
+                                    replyText += `\n\n❌ *Система: К сожалению, врача специальности "${bData.spec}" сейчас нет в нашей базе.*`;
+                                }
+                            }
                         }
-                    } catch (e) {
-                        replyText = 'Системная ошибка сети: ' + e.message;
-                        console.error("Network Error:", e);
+                    } catch (err) {
+                        console.error("Ошибка обработки ИИ:", err);
+                        replyText = "Извините, произошла техническая ошибка при ответе.";
                     }
-                } else {
-                    replyText = 'Автоответчик: Система ИИ пока не подключена (нужен API ключ).';
                 }
 
-                // Сохраняем ответ ИИ
+                // Сохраняем итоговый ответ в чат
                 await sql`INSERT INTO chat_messages (sender, receiver, text) VALUES ('support', ${sender}, ${replyText})`;
             }
 
-            // Возвращаем ответ прямо в этом же запросе!
             return new Response(JSON.stringify({ message: "Отправлено", reply: replyText }), { status: 200 });
         }
 
-        // 2. ЗАГРУЗКА ИСТОРИИ (вызывается только один раз при открытии чата)
+        // 2. ЗАГРУЗКА ИСТОРИИ
         if (action === 'get') {
             const msgs = await sql`
                 SELECT * FROM chat_messages 
