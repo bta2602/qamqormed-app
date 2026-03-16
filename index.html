@@ -978,28 +978,56 @@
         <span id="toast-message" class="text-sm font-bold tracking-wide leading-tight">Успешно!</span>
     </div>
 
-    <div id="screen-add-treatment" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-50 overflow-y-auto">
-        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+    <div id="screen-conduct-appointment" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-50 overflow-y-auto">
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-20 border-b border-gray-50 shadow-sm">
             <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
-            <h1 class="text-xl font-bold text-gray-900">Назначить лечение</h1>
+            <h1 class="text-xl font-bold text-gray-900">Проведение приема</h1>
         </div>
         
-        <div class="p-6 flex-1 flex flex-col gap-5">
-            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                <label class="block text-sm font-bold text-blue-800 mb-2">ИИН пациента</label>
-                <input type="text" id="treatment-patient-iin" readonly class="w-full bg-transparent border-none text-gray-900 text-sm font-bold outline-none p-0 cursor-default">
+        <div class="p-6 flex-1 flex flex-col gap-6">
+            <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-blue-500 font-bold mb-1">Пациент</p>
+                    <h3 id="conduct-patient-name" class="font-bold text-gray-900 text-lg">...</h3>
+                    <p id="conduct-patient-iin" class="text-sm text-gray-500">...</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-xl"><i class="fas fa-user"></i></div>
             </div>
             
+            <input type="hidden" id="conduct-appt-id">
+
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Рецепт и рекомендации</label>
-                <textarea id="treatment-text" placeholder="Опишите план лечения, препараты и дозировки..." class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-primary h-48 resize-none"></textarea>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Жалобы пациента</label>
+                <textarea id="conduct-complaints" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-primary min-h-[80px]"></textarea>
             </div>
-            <input type="hidden" id="treatment-appt-id">
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Диагноз <span class="text-red-500">*</span></label>
+                <input type="text" id="conduct-diagnosis" placeholder="Например: J06.9 ОРВИ" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-primary outline-none">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Назначенное лечение <span class="text-red-500">*</span></label>
+                <textarea id="conduct-treatment" placeholder="Препараты, дозировки, режим..." class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-sm focus:ring-1 focus:ring-primary min-h-[120px] resize-none"></textarea>
+            </div>
+
+            <div class="border-t border-gray-100 pt-6">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-microscope text-primary"></i> Экспресс-анализы (Опционально)</h3>
+                
+                <div class="relative mb-4">
+                    <select id="conduct-analysis-type" onchange="renderConductAnalysisFields()" class="w-full bg-gray-50 border border-gray-100 text-gray-900 text-sm font-bold rounded-2xl p-4 focus:ring-1 focus:ring-primary appearance-none outline-none">
+                        <option value="" selected>Не прикреплять анализы</option>
+                        </select>
+                    <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                </div>
+                
+                <div id="conduct-analysis-fields" class="space-y-4"></div>
+            </div>
         </div>
 
-        <div class="p-6 bg-white border-t border-gray-50 sticky bottom-0 max-w-[480px] w-full mx-auto">
-            <button id="save-treatment-btn" onclick="saveTreatment()" class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-glow active:scale-95 transition-transform flex justify-center items-center gap-2">
-                <i class="fas fa-check"></i> Сохранить назначение
+        <div class="p-6 bg-white border-t border-gray-50 sticky bottom-0 max-w-[480px] w-full mx-auto shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+            <button id="btn-complete-appt" onclick="completeAppointment()" class="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-glow active:scale-95 transition-transform flex justify-center items-center gap-2">
+                <i class="fas fa-check-circle text-lg"></i> Завершить прием
             </button>
         </div>
     </div>
@@ -2703,24 +2731,46 @@
 
     }
 
-    function renderDoctorAppointments() {
+    // ФУНКЦИЯ ОТРИСОВКИ РАСПИСАНИЯ ВРАЧА С ФИЛЬТРОМ
+    function renderDoctorAppointments(filterDate = 'all') {
         const container = document.getElementById('doctor-patients-list');
         if (!container) return;
 
-        const activeAppts = myAppointments.filter(a => a.status !== 'cancelled');
+        let activeAppts = myAppointments.filter(a => a.status !== 'cancelled');
+        
+        // Фильтрация по дате (Фишки для врачей!)
+        const todayStr = new Date().toISOString().split('T')[0];
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+        if (filterDate === 'today') {
+            activeAppts = activeAppts.filter(a => a.date === todayStr);
+        } else if (filterDate === 'tomorrow') {
+            activeAppts = activeAppts.filter(a => a.date === tomorrowStr);
+        }
+
+        // РИСУЕМ КНОПКИ ФИЛЬТРОВ СВЕРХУ
+        const filterHtml = `
+            <div class="flex gap-2 mb-4 bg-gray-100 p-1 rounded-xl">
+                <button onclick="renderDoctorAppointments('all')" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all ${filterDate === 'all' ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}">Все</button>
+                <button onclick="renderDoctorAppointments('today')" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all ${filterDate === 'today' ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}">Сегодня</button>
+                <button onclick="renderDoctorAppointments('tomorrow')" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all ${filterDate === 'tomorrow' ? 'bg-white shadow-sm text-primary' : 'text-gray-500'}">Завтра</button>
+            </div>
+        `;
 
         if (activeAppts.length === 0) {
-            container.innerHTML = `
+            container.innerHTML = filterHtml + `
             <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-32 text-gray-400">
                 <i class="far fa-calendar-times text-3xl mb-2 opacity-50"></i>
-                <p class="text-sm font-bold">Пока нет записей</p>
+                <p class="text-sm font-bold">Записей нет</p>
             </div>`;
             return;
         }
 
-        container.innerHTML = activeAppts.map(appt => {
+        container.innerHTML = filterHtml + activeAppts.map(appt => {
             return `
-            <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative transition-all hover:shadow-md">
+            <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative transition-all hover:shadow-md mb-4">
                 <div class="flex justify-between mb-4 border-b border-gray-50 pb-3">
                     <span class="font-bold text-primary text-sm flex items-center gap-2">
                         <i class="far fa-calendar-alt"></i> ${appt.date}, ${appt.time}
@@ -2733,23 +2783,17 @@
                 <div class="mb-5">
                     <h3 class="font-bold text-xl text-gray-900 leading-tight mb-1">${appt.patientName}</h3>
                     <p class="text-sm text-gray-500 font-medium">ИИН: ${appt.patientIin}</p>
-                    <div class="mt-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                        <p class="text-xs text-gray-400 font-bold mb-1">Жалоба пациента:</p>
-                        <p class="text-sm text-gray-900 font-medium">${appt.message || 'Нет комментариев'}</p>
-                    </div>
                 </div>
                 
-                ${appt.treatment ? `
+                ${appt.status === 'completed' ? `
                     <div class="mb-2 bg-green-50 p-3 rounded-xl border border-green-100">
-                        <p class="text-xs text-green-600 font-bold mb-1"><i class="fas fa-check-circle"></i> Лечение назначено</p>
-                        <p class="text-sm text-gray-800">${appt.treatment}</p>
+                        <p class="text-xs text-green-600 font-bold mb-1"><i class="fas fa-check-circle"></i> Прием завершен</p>
+                        <p class="text-sm text-gray-800"><span class="font-bold">Диагноз:</span> ${appt.diagnosis || 'Не указан'}</p>
                     </div>
                 ` : `
-                    <div class="flex gap-2">
-                        <button onclick="openAddTreatment(${appt.id}, '${appt.patientIin}')" class="flex-1 bg-primary/10 text-primary py-3 rounded-xl font-bold shadow-sm active:scale-95 transition-transform text-sm">
-                            <i class="fas fa-pills mr-1"></i> Назначить лечение
-                        </button>
-                    </div>
+                    <button onclick="openConductAppointment(${appt.id}, '${appt.patientIin}', '${appt.patientName}', '${appt.message || ''}')" class="w-full bg-primary/10 text-primary py-3 rounded-xl font-bold shadow-sm active:scale-95 transition-transform text-sm flex justify-center items-center gap-2">
+                        <i class="fas fa-stethoscope"></i> Провести прием
+                    </button>
                 `}
             </div>`;
         }).join('');
@@ -4126,6 +4170,154 @@
         } catch (e) {
             document.getElementById(loadingId).remove();
             showToast("Ошибка отправки", "error");
+        }
+    }
+
+    // ОТКРЫТИЕ ОКНА ПРИЕМА
+    function openConductAppointment(apptId, patientIin, patientName, message) {
+        document.getElementById('conduct-appt-id').value = apptId;
+        document.getElementById('conduct-patient-iin').innerText = patientIin;
+        document.getElementById('conduct-patient-name').innerText = patientName;
+        document.getElementById('conduct-complaints').value = message; // Автоматически подставляем жалобу из записи
+        
+        document.getElementById('conduct-diagnosis').value = '';
+        document.getElementById('conduct-treatment').value = '';
+        
+        // Заполняем список анализов
+        const select = document.getElementById('conduct-analysis-type');
+        if (select.options.length <= 1) {
+            Object.keys(analysisConfig).forEach(type => {
+                select.innerHTML += `<option value="${type}">${type}</option>`;
+            });
+        }
+        select.value = '';
+        document.getElementById('conduct-analysis-fields').innerHTML = '';
+
+        goToScreen('conduct-appointment');
+    }
+
+    // ОТРИСОВКА ПОЛЕЙ АНАЛИЗОВ ВНУТРИ ПРИЕМА
+    function renderConductAnalysisFields() {
+        const type = document.getElementById('conduct-analysis-type').value;
+        const container = document.getElementById('conduct-analysis-fields');
+        if(!type || !analysisConfig[type]) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const fields = analysisConfig[type];
+        container.innerHTML = fields.map(f => `
+            <div class="bg-white p-3 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                <div>
+                    <p class="text-sm font-bold text-gray-800">${f.name}</p>
+                    <p class="text-[10px] text-gray-400">Норма: ${f.min}-${f.max} ${f.unit}</p>
+                </div>
+                <div class="w-24 relative">
+                    <input type="number" step="0.1" id="conduct-input-${f.id}" placeholder="0.0" class="w-full bg-gray-50 border border-gray-100 text-gray-900 font-bold text-sm rounded-lg py-2 px-3 focus:ring-1 focus:ring-primary outline-none text-right">
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ЗАВЕРШЕНИЕ ПРИЕМА (ОТПРАВКА НА СЕРВЕР)
+    async function completeAppointment() {
+        const apptId = document.getElementById('conduct-appt-id').value;
+        const patientIin = document.getElementById('conduct-patient-iin').innerText;
+        const complaints = document.getElementById('conduct-complaints').value;
+        const diagnosis = document.getElementById('conduct-diagnosis').value.trim();
+        const treatment = document.getElementById('conduct-treatment').value.trim();
+        
+        if(!diagnosis || !treatment) {
+            showToast('Диагноз и лечение обязательны к заполнению', 'error');
+            return;
+        }
+
+        // Собираем анализы (если врач их выбрал)
+        let analysisPayload = null;
+        const analysisType = document.getElementById('conduct-analysis-type').value;
+        
+        if (analysisType) {
+            const fields = analysisConfig[analysisType];
+            let results = [];
+            let hasWarning = false, hasDanger = false, isValid = true;
+
+            fields.forEach(f => {
+                const input = document.getElementById(`conduct-input-${f.id}`);
+                if(!input || input.value.trim() === "") isValid = false;
+                else {
+                    const val = parseFloat(input.value);
+                    let status = 'normal';
+                    const criticalOffset = (f.max - f.min) * 0.25;
+
+                    if (val < f.min) {
+                        status = (val < f.min - criticalOffset) ? 'danger' : 'warning';
+                        hasWarning = true;
+                        if(status === 'danger') hasDanger = true;
+                    } else if (val > f.max) {
+                        status = (val > f.max + criticalOffset) ? 'danger' : 'warning';
+                        hasWarning = true;
+                        if(status === 'danger') hasDanger = true;
+                    }
+                    results.push({ name: f.name, value: val, min: f.min, max: f.max, unit: f.unit, status: status });
+                }
+            });
+
+            if (!isValid) {
+                showToast('Заполните все значения выбранного анализа!', 'error');
+                return;
+            }
+
+            const today = new Date();
+            analysisPayload = {
+                type: analysisType,
+                date: `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth()+1).padStart(2, '0')}.${today.getFullYear()}`,
+                results: results,
+                overallStatus: hasDanger ? 'danger' : (hasWarning ? 'warning' : 'normal')
+            };
+        }
+
+        const btn = document.getElementById('btn-complete-appt');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сохранение...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+
+        try {
+            const response = await fetch('/.netlify/functions/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'complete', 
+                    appointmentId: apptId,
+                    patientIin: patientIin,
+                    doctorEmail: currentUser.email,
+                    notes: complaints, // Жалобы пациента
+                    diagnosis: diagnosis,
+                    treatment: treatment,
+                    analysis: analysisPayload // Передаем анализы "в довесок"
+                })
+            });
+
+            if (response.ok) {
+                // Создаем красивое уведомление для пациента
+                let notifs = JSON.parse(localStorage.getItem('qamqorNotifs_' + patientIin) || '[]');
+                notifs.push({
+                    title: 'Прием завершен ✅',
+                    body: `Врач поставил диагноз: ${diagnosis}. Ознакомьтесь с назначениями в разделе "Мои приемы".`,
+                    isRead: false
+                });
+                localStorage.setItem('qamqorNotifs_' + patientIin, JSON.stringify(notifs));
+
+                showToast('Прием успешно проведен!');
+                await fetchAppointments(); // Обновляем список записей
+                goBack();
+            } else {
+                showToast('Ошибка при сохранении', 'error');
+            }
+        } catch (error) {
+            showToast('Ошибка сети', 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
         }
     }
 
