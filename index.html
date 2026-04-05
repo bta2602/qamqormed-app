@@ -569,38 +569,22 @@
 
     <div id="screen-main" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-fade-in relative">
 
-        <div class="px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-4 bg-white sticky top-0 z-20 shadow-sm transition-all duration-300" id="main-header">
-
-            <div class="flex justify-between items-center mb-4">
-
-                <button onclick="toggleCityModal()" class="flex items-center gap-2 text-gray-800 active:opacity-70">
-
-                    <i class="fas fa-map-marker-alt text-primary text-lg"></i>
-
-                    <span class="text-lg font-bold" id="current-city">Астана</span>
-
-                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
-
-                </button>
-
-                <button onclick="goToScreen('notifications')" class="relative p-2 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
-
+       <div class="px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-4 bg-white sticky top-0 z-20 shadow-sm transition-all duration-300" id="main-header">
+            <div class="flex items-center gap-3">
+                
+                <!-- Поисковая строка -->
+                <div class="relative flex-1" id="search-container">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="search-input" oninput="filterDoctors(this.value)" placeholder="Поиск по QamqorMed" class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-3xl text-sm font-medium text-gray-800 focus:ring-1 focus:ring-primary focus:bg-white outline-none transition-all shadow-sm">
+                </div>
+                
+                <!-- Уведомления -->
+                <button onclick="goToScreen('notifications')" class="relative w-12 h-12 rounded-3xl bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-100 flex items-center justify-center flex-shrink-0 shadow-sm active:scale-95">
                     <i class="far fa-bell text-gray-700 text-xl"></i>
-
-                    <span id="notif-dot" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-
+                    <span id="notif-dot" class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse hidden"></span>
                 </button>
-
+                
             </div>
-
-            <div class="relative transition-all duration-300 overflow-hidden" id="search-container">
-
-                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-
-                <input type="text" id="search-input" oninput="filterDoctors(this.value)" placeholder="Ищи врача, услугу..." class="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-none rounded-2xl text-sm focus:ring-1 focus:ring-primary shadow-sm">
-
-            </div>
-
         </div>
 
         <div id="main-scroll-area" class="flex-1 overflow-y-auto pb-24 scrollbar-hide">
@@ -612,84 +596,345 @@
 
             <!-- HOME TAB -->
 
-            <div id="tab-home" class="animate-fade-in">
+            <div id="tab-home" class="animate-fade-in pb-8">
+
+                <div class="px-6 mt-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="rounded-2xl p-4 bg-gradient-to-br from-teal-500 to-teal-400 text-white relative overflow-hidden cursor-pointer active:scale-95 transition-transform shadow-sm min-h-[110px]">
+                            <h3 class="text-[13px] font-bold mb-1 leading-snug relative z-10">Проверь здоровье<br>вовремя</h3>
+                            <p class="text-[11px] opacity-90 relative z-10">Запишитесь<br>на приём</p>
+                            <i class="fas fa-heartbeat absolute -bottom-3 -right-3 text-[80px] opacity-20"></i>
+                        </div>
+                        <div class="rounded-2xl p-4 bg-gradient-to-br from-blue-200 to-blue-300 text-blue-900 relative overflow-hidden cursor-pointer active:scale-95 transition-transform shadow-sm min-h-[110px]">
+                            <h3 class="text-[13px] font-bold mb-1 leading-snug relative z-10">Ваше здоровье —<br>наша забота</h3>
+                            <p class="text-[11px] opacity-90 relative z-10 font-bold mt-1">QamqorMed</p>
+                            <i class="fas fa-stethoscope absolute -bottom-2 -right-3 text-[70px] opacity-20 transform -rotate-12"></i>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="px-6 mt-6">
-
-                    <div class="flex justify-between items-end mb-4">
-
-                        <h2 class="font-bold text-gray-800 text-lg" data-key="popular_directions">Популярные направления</h2>
-
-                        <button onclick="goToScreen('all-categories')" class="text-primary text-sm font-bold hover:opacity-80" data-key="all">Все</button>
-
+                    <!-- Белая подложка для иконок -->
+                    <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100">
+                        <div class="grid grid-cols-4 gap-y-5 gap-x-2">
+                            <div onclick="switchTab('profile')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="fas fa-user-circle text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 leading-tight font-medium">Профиль</span>
+                            </div>
+                            <div onclick="goToScreen('appointments')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="fas fa-clipboard-list text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 leading-tight font-medium">Мои приёмы</span>
+                            </div>
+                            <div onclick="goToScreen('analyses')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="fas fa-vial text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 leading-tight font-medium">Анализы</span>
+                            </div>
+                            <div onclick="goToScreen('medications')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="fas fa-pills text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 leading-tight font-medium">Прием лекарств</span>
+                            </div>
+                            <div onclick="goToScreen('all-categories')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="fas fa-calendar-plus text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 leading-tight font-medium">Запись к врачу</span>
+                            </div>
+                            <div onclick="activeDoctorCategory = null; document.getElementById('all-doctors-title').innerText = 'Врачи рядом'; document.getElementById('all-doctors-title').setAttribute('data-key', 'doctors_nearby'); filterDoctorsByCity(); goToScreen('all-doctors')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="fas fa-user-md text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 leading-tight font-medium">Врачи рядом</span>
+                            </div>
+                            <div onclick="goToScreen('clinics')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="far fa-hospital text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 leading-tight font-medium">Клиники</span>
+                            </div>
+                            <div onclick="openSupportChat()" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                                <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-2xl flex items-center justify-center mb-2 text-primary transition-colors">
+                                    <i class="fas fa-robot text-xl"></i>
+                                </div>
+                                <span class="text-[11px] text-gray-800 font-bold text-primary leading-tight">Qamqor AI</span>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-
-                        <div onclick="filterByCategory('Стоматолог')" class="flex-shrink-0 bg-white rounded-3xl p-4 px-5 flex items-center gap-3 shadow-card border border-gray-100 min-w-[150px] cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"><div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-primary"><i class="fas fa-tooth text-lg"></i></div><div><p class="font-bold text-sm text-gray-800" data-key="dentist">Стоматолог</p><p class="text-xs text-gray-400">21 док.</p></div></div>
-
-                        <div onclick="filterByCategory('Невролог')" class="flex-shrink-0 bg-white rounded-3xl p-4 px-5 flex items-center gap-3 shadow-card border border-gray-100 min-w-[150px] cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"><div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><i class="fas fa-brain text-lg"></i></div><div><p class="font-bold text-sm text-gray-800" data-key="neurologist">Невролог</p><p class="text-xs text-gray-400">19 док.</p></div></div>
-
-                        <div onclick="filterByCategory('Кардиолог')" class="flex-shrink-0 bg-white rounded-3xl p-4 px-5 flex items-center gap-3 shadow-card border border-gray-100 min-w-[150px] cursor-pointer hover:bg-gray-50 active:scale-95 transition-all"><div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500"><i class="fas fa-heartbeat text-lg"></i></div><div><p class="font-bold text-sm text-gray-800" data-key="cardiologist">Кардиолог</p><p class="text-xs text-gray-400">15 док.</p></div></div>
-
-                    </div>
-
                 </div>
 
                 <div class="px-6 mt-8">
-
-                    <div class="flex justify-between items-end mb-4">
-
-                        <h2 class="font-bold text-gray-800 text-lg" data-key="doctors_nearby">Врачи рядом</h2>
-
-                        <button onclick="goToScreen('all-doctors')" class="text-primary text-sm font-bold hover:opacity-80" data-key="all">Все</button>
-
+                    <!-- Запуск Qamqor AI -->
+                    <div onclick="openSupportChat()" class="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all mb-3">
+                        <div class="w-12 h-12 bg-teal-50 rounded-[14px] flex items-center justify-center flex-shrink-0 text-primary">
+                            <i class="fas fa-robot text-2xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-[15px] font-bold text-gray-900 leading-tight mb-1">Qamqor AI</h3>
+                            <p class="text-[11px] text-gray-500 font-medium">Ваш умный медицинский ассистент</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-sm"></i>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4" id="doctors-home-grid"></div>
+                    <!-- 4 навигационные карточки -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div onclick="goToScreen('all-categories')" class="bg-white p-3.5 rounded-3xl flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 bg-green-50 text-green-500 rounded-[12px] flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-calendar-plus text-lg"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-[13px] font-bold text-gray-900 leading-tight mb-0.5 truncate">Запись к врачу</h4>
+                                <p class="text-[10px] text-gray-400 truncate">Быстро и удобно</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-200 text-[10px]"></i>
+                        </div>
+                        
+                        <div onclick="openComingSoon('Страхование', 'fas fa-shield-alt', 'Здесь вы сможете оформить и управлять своими медицинскими полисами ОМС и ДМС.')" class="bg-white p-3.5 rounded-3xl flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-[12px] flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-shield-alt text-lg"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-[13px] font-bold text-gray-900 leading-tight mb-0.5 truncate">Страхование</h4>
+                                <p class="text-[10px] text-gray-400 truncate">Мед. полисы</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-200 text-[10px]"></i>
+                        </div>
 
+                        <div onclick="goToScreen('analyses')" class="bg-white p-3.5 rounded-3xl flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-[12px] flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-flask text-lg"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-[13px] font-bold text-gray-900 leading-tight mb-0.5 truncate">Результаты</h4>
+                                <p class="text-[10px] text-gray-400 truncate">Онлайн доступ</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-200 text-[10px]"></i>
+                        </div>
+
+                        <!-- Медкарта теперь ведет на функцию openPersonalData -->
+                        <div onclick="openPersonalData(true)" class="bg-white p-3.5 rounded-3xl flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-[12px] flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-file-medical text-lg"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-[13px] font-bold text-gray-900 leading-tight mb-0.5 truncate">Медкарта</h4>
+                                <p class="text-[10px] text-gray-400 truncate">Вся история</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-200 text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 mt-8">
+                    <h2 class="text-[17px] font-extrabold text-gray-900 mb-4">Полезное для вас</h2>
+                    <div class="grid grid-cols-4 gap-2.5">
+                        <div onclick="openComingSoon('Профилактика', 'fas fa-shield-virus', 'Здесь будут собраны персональные рекомендации по чекапам и профилактике заболеваний.')" class="bg-white p-3 rounded-[14px] text-center shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 mx-auto bg-green-50 text-green-500 rounded-[10px] flex items-center justify-center mb-2.5">
+                                <i class="fas fa-shield-virus text-lg"></i>
+                            </div>
+                            <h4 class="text-[11px] font-bold text-gray-900 leading-tight mb-1">Профилактика</h4>
+                            <p class="text-[9px] text-gray-400">Будьте здоровы</p>
+                        </div>
+                        
+                        <div onclick="openComingSoon('Питание', 'fas fa-apple-alt', 'Скоро здесь появятся умные советы по диетам и здоровому питанию.')" class="bg-white p-3 rounded-[14px] text-center shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 mx-auto bg-blue-50 text-blue-500 rounded-[10px] flex items-center justify-center mb-2.5">
+                                <i class="fas fa-apple-alt text-lg"></i>
+                            </div>
+                            <h4 class="text-[11px] font-bold text-gray-900 leading-tight mb-1">Питание</h4>
+                            <p class="text-[9px] text-gray-400">Советы</p>
+                        </div>
+                        
+                        <div onclick="openComingSoon('Ментальное здоровье', 'fas fa-brain', 'В этом разделе мы соберем практики осознанности, тесты на выгорание и контакты психологов.')" class="bg-white p-3 rounded-[14px] text-center shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 mx-auto bg-indigo-50 text-indigo-500 rounded-[10px] flex items-center justify-center mb-2.5">
+                                <i class="fas fa-brain text-lg"></i>
+                            </div>
+                            <h4 class="text-[11px] font-bold text-gray-900 leading-tight mb-1">Ментальное<br>здоровье</h4>
+                        </div>
+                        
+                        <div onclick="openComingSoon('Акции', 'fas fa-percentage', 'Здесь будут публиковаться специальные предложения и скидки от наших клиник-партнеров.')" class="bg-white p-3 rounded-[14px] text-center shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-gray-100 cursor-pointer active:scale-95 transition-all">
+                            <div class="w-10 h-10 mx-auto bg-pink-50 text-pink-500 rounded-[10px] flex items-center justify-center mb-2.5">
+                                <i class="fas fa-percentage text-lg"></i>
+                            </div>
+                            <h4 class="text-[11px] font-bold text-gray-900 leading-tight mb-1">Акции</h4>
+                            <p class="text-[9px] text-gray-400">Скидки</p>
+                        </div>
+                    </div>
                 </div>
 
             </div>
 
-            <!-- SERVICES TAB -->
+           <!-- SERVICES TAB -->
+            <div id="tab-services" class="hidden animate-fade-in px-6 pt-12 pb-24">
+                <div class="flex items-center gap-3 mb-6">
+                    <button onclick="switchTab('home')" class="p-2 -ml-2 rounded-full hover:bg-gray-50 transition-colors active:scale-95">
+                        <i class="fas fa-chevron-left text-gray-600"></i>
+                    </button>
+                    <!-- Переименовали в Сервисы -->
+                    <h2 class="text-2xl font-bold text-gray-800" data-key="services">Сервисы</h2>
+                </div>
 
-            <div id="tab-services" class="hidden animate-fade-in px-6 mt-6">
+                <!-- СИНЯЯ ЗОНА: Длинная кнопка профиля -->
+                <button onclick="switchTab('profile')" class="w-full bg-white p-4 rounded-[2rem] flex items-center gap-4 shadow-sm border border-gray-100 active:scale-[0.97] transition-all mb-6 group text-left">
+                    <div class="w-14 h-14 rounded-full overflow-hidden bg-teal-50 border-2 border-white shadow-sm flex-shrink-0">
+                        <img id="services-avatar" src="https://i.pinimg.com/236x/c0/02/82/c002826ebc873be910f0fb44bc62f219.jpg" class="w-full h-full object-cover">
+                    </div>
+                    
+                    <div class="flex-1">
+                        <h3 class="font-extrabold text-gray-900 text-base leading-tight" id="services-profile-name">Загрузка...</h3>
+                        <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Личный кабинет</p>
+                    </div>
+                    
+                    <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 group-hover:text-primary group-hover:bg-teal-50 transition-colors">
+                        <i class="fas fa-chevron-right text-xs"></i>
+                    </div>
+                </button>
 
-                <h2 class="text-2xl font-bold text-gray-800 mb-6" data-key="services">Услуги</h2>
+                <!-- КРАСНАЯ ЗОНА: Сетка сервисов (макс 4 в ширину, алфавитный порядок) -->
+                <div class="bg-white rounded-[2rem] p-5 shadow-sm border border-gray-100 mb-6">
+                    <div class="grid grid-cols-4 gap-y-5 gap-x-2">
+                        
+                        <!-- 1. Qamqor AI (Первый) -->
+                        <div onclick="openSupportChat()" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-[14px] flex items-center justify-center mb-2 text-primary transition-colors">
+                                <i class="fas fa-robot text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-primary font-bold leading-tight">Qamqor AI</span>
+                        </div>
+                        
+                        <!-- 2. Акции -->
+                        <div onclick="openComingSoon('Акции', 'fas fa-percentage', 'Здесь будут публиковаться специальные предложения и скидки от наших клиник-партнеров.')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-pink-50 hover:bg-pink-100 rounded-[14px] flex items-center justify-center mb-2 text-pink-500 transition-colors">
+                                <i class="fas fa-percentage text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Акции</span>
+                        </div>
 
-                <div class="space-y-4">
+                        <!-- 3. Анализы -->
+                        <div onclick="goToScreen('analyses')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-indigo-50 hover:bg-indigo-100 rounded-[14px] flex items-center justify-center mb-2 text-indigo-500 transition-colors">
+                                <i class="fas fa-vial text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Анализы</span>
+                        </div>
 
-                    <div onclick="goToScreen('all-categories')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <!-- 4. Врачи рядом -->
+                        <div onclick="activeDoctorCategory = null; document.getElementById('all-doctors-title').innerText = 'Врачи рядом'; document.getElementById('all-doctors-title').setAttribute('data-key', 'doctors_nearby'); filterDoctorsByCity(); goToScreen('all-doctors')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-[14px] flex items-center justify-center mb-2 text-primary transition-colors">
+                                <i class="fas fa-user-md text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Врачи рядом</span>
+                        </div>
 
-                        <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600"><i class="fas fa-user-md"></i></div><span class="font-bold text-gray-800" data-key="make_appointment">Записаться к врачу</span></div><i class="fas fa-chevron-right text-gray-300"></i>
+                        <!-- 5. Запись к врачу -->
+                        <div onclick="goToScreen('all-categories')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-green-50 hover:bg-green-100 rounded-[14px] flex items-center justify-center mb-2 text-green-500 transition-colors">
+                                <i class="fas fa-calendar-plus text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Запись к врачу</span>
+                        </div>
+
+                        <!-- 6. Клиники -->
+                        <div onclick="goToScreen('clinics')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-[14px] flex items-center justify-center mb-2 text-primary transition-colors">
+                                <i class="far fa-hospital text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Клиники</span>
+                        </div>
+
+                        <!-- 7. Медкарта -->
+                        <div onclick="openPersonalData(true)" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-indigo-50 hover:bg-indigo-100 rounded-[14px] flex items-center justify-center mb-2 text-indigo-500 transition-colors">
+                                <i class="fas fa-file-medical text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Медкарта</span>
+                        </div>
+
+                        <!-- 8. Ментальное здоровье -->
+                        <div onclick="openComingSoon('Ментальное здоровье', 'fas fa-brain', 'В этом разделе мы соберем практики осознанности, тесты на выгорание и контакты психологов.')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-indigo-50 hover:bg-indigo-100 rounded-[14px] flex items-center justify-center mb-2 text-indigo-500 transition-colors">
+                                <i class="fas fa-brain text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Ментальное<br>здоровье</span>
+                        </div>
+
+                        <!-- 9. Мои приёмы -->
+                        <div onclick="goToScreen('appointments')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-[14px] flex items-center justify-center mb-2 text-primary transition-colors">
+                                <i class="fas fa-clipboard-list text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Мои приёмы</span>
+                        </div>
+
+                        <!-- 10. Настройки -->
+                        <div onclick="goToScreen('settings')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-blue-50 hover:bg-blue-100 rounded-[14px] flex items-center justify-center mb-2 text-blue-500 transition-colors">
+                                <i class="fas fa-cog text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Настройки</span>
+                        </div>
+
+                        <!-- 11. Оплата -->
+                        <div onclick="goToScreen('payments')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-purple-50 hover:bg-purple-100 rounded-[14px] flex items-center justify-center mb-2 text-purple-500 transition-colors">
+                                <i class="far fa-credit-card text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Оплата</span>
+                        </div>
+
+                        <!-- 12. Питание -->
+                        <div onclick="openComingSoon('Питание', 'fas fa-apple-alt', 'Скоро здесь появятся умные советы по диетам и здоровому питанию.')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-blue-50 hover:bg-blue-100 rounded-[14px] flex items-center justify-center mb-2 text-blue-500 transition-colors">
+                                <i class="fas fa-apple-alt text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Питание</span>
+                        </div>
+
+                        <!-- 13. Прием лекарств -->
+                        <div onclick="goToScreen('medications')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-teal-50 hover:bg-teal-100 rounded-[14px] flex items-center justify-center mb-2 text-primary transition-colors">
+                                <i class="fas fa-pills text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Прием лекарств</span>
+                        </div>
+
+                        <!-- 14. Профилактика -->
+                        <div onclick="openComingSoon('Профилактика', 'fas fa-shield-virus', 'Здесь будут собраны персональные рекомендации по чекапам и профилактике заболеваний.')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-green-50 hover:bg-green-100 rounded-[14px] flex items-center justify-center mb-2 text-green-500 transition-colors">
+                                <i class="fas fa-shield-virus text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Профилактика</span>
+                        </div>
+
+                        <!-- 15. Страхование -->
+                        <div onclick="openComingSoon('Страхование', 'fas fa-shield-alt', 'Здесь вы сможете оформить и управлять своими медицинскими полисами ОМС и ДМС.')" class="flex flex-col items-center text-center cursor-pointer active:scale-95 transition-transform">
+                            <div class="w-12 h-12 bg-blue-50 hover:bg-blue-100 rounded-[14px] flex items-center justify-center mb-2 text-blue-500 transition-colors">
+                                <i class="fas fa-shield-alt text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gray-800 leading-tight font-medium">Страхование</span>
+                        </div>
 
                     </div>
+                </div>
 
-                    <div onclick="goToScreen('appointments')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
-
-                        <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600"><i class="fas fa-calendar-check"></i></div><span class="font-bold text-gray-800" data-key="my_appointments">Мои приёмы</span></div><i class="fas fa-chevron-right text-gray-300"></i>
-
+                <!-- ЗЕЛЕНАЯ ЗОНА: FAQ и Поддержка -->
+                <div class="space-y-3">
+                    <div onclick="goToScreen('faq')" class="bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-all cursor-pointer">
+                        <div class="w-10 h-10 rounded-[12px] bg-purple-50 flex items-center justify-center text-purple-500 flex-shrink-0"><i class="fas fa-question"></i></div>
+                        <span class="font-bold text-gray-800 flex-1" data-key="faq_title">Часто задаваемые вопросы</span>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
                     </div>
 
-                    <div onclick="goToScreen('vaccination')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
-
-                         <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><i class="fas fa-syringe"></i></div><span class="font-bold text-gray-800" data-key="vaccination_calendar">Вакцинация</span></div><i class="fas fa-chevron-right text-gray-300"></i>
-
+                    <div onclick="openSupportChat()" class="bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-all cursor-pointer">
+                        <div class="w-10 h-10 rounded-[12px] bg-teal-50 flex items-center justify-center text-primary flex-shrink-0"><i class="fas fa-headset"></i></div>
+                        <span class="font-bold text-gray-800 flex-1" data-key="support_chat">Чат поддержки</span>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
                     </div>
-
-                    <div onclick="goToScreen('faq')" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
-
-                        <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-500"><i class="fas fa-question"></i></div><span class="font-bold text-gray-800" data-key="faq_title">Часто задаваемые вопросы</span></div><i class="fas fa-chevron-right text-gray-300"></i>
-
-                    </div>
-
-                     <div onclick="openSupportChat()" class="bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
-
-                         <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-500"><i class="fas fa-headset"></i></div><span class="font-bold text-gray-800" data-key="support_chat">Чат поддержки</span></div><i class="fas fa-chevron-right text-gray-300"></i>
-
-                    </div>
-
                 </div>
 
             </div>
@@ -723,10 +968,13 @@
             </div>
 
             <!-- PROFILE TAB -->
-
-            <div id="tab-profile" class="hidden animate-fade-in px-6 mt-6 pb-24">
-
-                <h2 class="text-2xl font-bold text-gray-800 mb-6" data-key="profile">Профиль</h2>
+            <div id="tab-profile" class="hidden animate-fade-in px-6 pt-12 pb-24">
+                <div class="flex items-center gap-3 mb-6">
+                    <button onclick="switchTab('home')" class="p-2 -ml-2 rounded-full hover:bg-gray-50 transition-colors active:scale-95">
+                        <i class="fas fa-chevron-left text-gray-600"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold text-gray-800" data-key="profile">Профиль</h2>
+                </div>
 
                 <div class="flex items-center gap-5 mb-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-100">
 
@@ -752,7 +1000,7 @@
 
                 <div class="space-y-3">
 
-                    <button onclick="goToScreen('personal-data')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-[0.98] transition-all group">
+                    <button onclick="openPersonalData(false)" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-50 active:scale-[0.98] transition-all group">
 
                         <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-primary"><i class="far fa-user"></i></div><span class="font-bold text-gray-700" data-key="personal_data">Личные данные</span><i class="fas fa-chevron-right ml-auto text-gray-300"></i>
 
@@ -788,14 +1036,8 @@
 
         </div>
 
-        <div class="bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)] px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-between sm:justify-center sm:gap-14 md:gap-20 items-center absolute bottom-0 w-full z-30">
-            <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 text-primary transition-all duration-300 transform hover:-translate-y-1"><div class="w-10 h-10 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div></button>
-            <button onclick="switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-folder text-xl"></i></button>
-            <button onclick="switchTab('chat')" id="nav-chat" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-comment-dots text-xl"></i></button>
-            <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center gap-1 text-gray-400 transition-all duration-300 hover:text-primary transform hover:-translate-y-1"><i class="far fa-user text-xl"></i></button>
-        </div>
-
     </div>
+
 
     <!-- SCREENS -->
 
@@ -891,31 +1133,41 @@
 
         </div>
 
-        <div class="fixed bottom-0 w-full p-6 bg-white border-t border-gray-100 max-w-[480px]">
-
+        <div class="p-6 bg-white/95 backdrop-blur-sm border-t border-gray-100 flex-shrink-0 z-10 relative pb-[85px]">
             <button class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform" onclick="openBookingModal()" data-key="make_appointment">Записаться на приём</button>
-
         </div>
 
     </div>
 
     <!-- ALL DOCTORS -->
 
-    <div id="screen-all-doctors" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
+   <div id="screen-all-doctors" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in">
 
-        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
+        <div class="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-white z-10 border-b border-gray-50">
+            
+            <div class="flex items-center gap-3">
+                <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50 transition-colors active:scale-95">
+                    <i class="fas fa-chevron-left text-gray-600"></i>
+                </button>
+                <h1 class="text-xl font-bold text-gray-900" id="all-doctors-title" data-key="doctors_nearby">Врачи рядом</h1>
+            </div>
 
-            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
-
-            <h1 class="text-xl font-bold text-gray-900" id="all-doctors-title" data-key="doctors_nearby">Все врачи</h1>
-
+            <div id="city-selector" class="relative flex items-center text-gray-500 hover:text-gray-800 transition-colors cursor-pointer">
+                <i class="fas fa-map-marker-alt text-sm mr-1.5 pb-[1px]"></i>
+                <select id="city-filter-select" onchange="filterDoctorsByCity()" class="appearance-none bg-transparent font-medium text-sm outline-none cursor-pointer pr-4 z-10 relative">
+                    <option value="all">Все города</option>
+                    <option value="Астана">Астана</option>
+                    <option value="Алматы">Алматы</option>
+                    <option value="Шымкент">Шымкент</option>
+                    <option value="Актау">Актау</option>
+                </select>
+                <i class="fas fa-chevron-down text-[10px] absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400"></i>
+            </div>
+            
         </div>
 
         <div class="p-6 grid grid-cols-2 gap-4 overflow-y-auto pb-20" id="all-doctors-grid">
-
-             <!-- Injected via JS -->
-
-        </div>
+             </div>
 
     </div>
 
@@ -1233,13 +1485,19 @@
 
     </div>
 
-    <div id="screen-personal-data" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-40 overflow-y-auto">
-        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
-            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
-            <h1 class="text-xl font-bold text-gray-900" data-key="personal_data">Личные данные</h1>
+    <div id="screen-personal-data" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in relative z-40">
+        
+        <!-- Шапка -->
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-20 border-b border-gray-50 flex-shrink-0">
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50 transition-colors active:scale-95">
+                <i class="fas fa-chevron-left text-gray-600"></i>
+            </button>
+            <h1 class="text-xl font-bold text-gray-900" id="personal-data-title" data-key="personal_data">Личные данные</h1>
         </div>
 
-        <div class="p-6 flex-1 space-y-6">
+        <!-- Контент с правильным скроллом и большим отступом снизу (pb-32) -->
+        <div class="p-6 flex-1 overflow-y-auto pb-32 space-y-6 custom-scrollbar-y">
+            
             <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100">
                 <h3 class="font-bold text-gray-800 mb-4" data-key="basic_info">Основная информация</h3>
                 <div class="space-y-4 text-sm">
@@ -1289,9 +1547,25 @@
                 </div>
             </div>
             
+            <!-- БЛОК: Кнопки Медкарты (по умолчанию скрыт) -->
+            <div id="medcard-extra-buttons" class="hidden space-y-3">
+                <button onclick="goToScreen('vaccination')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-all group">
+                    <div class="w-10 h-10 rounded-[12px] bg-blue-50 flex items-center justify-center text-blue-500"><i class="fas fa-syringe"></i></div>
+                    <div class="text-left flex-1"><span class="block font-bold text-gray-800">Вакцинация</span><span class="text-[10px] text-gray-400 font-medium">История прививок</span></div>
+                    <i class="fas fa-chevron-right text-gray-300"></i>
+                </button>
+                <button onclick="goToScreen('analyses')" class="w-full bg-white p-5 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-all group">
+                    <div class="w-10 h-10 rounded-[12px] bg-indigo-50 flex items-center justify-center text-indigo-500"><i class="fas fa-vial"></i></div>
+                    <div class="text-left flex-1"><span class="block font-bold text-gray-800">Мои анализы</span><span class="text-[10px] text-gray-400 font-medium">Результаты лаборатории</span></div>
+                    <i class="fas fa-chevron-right text-gray-300"></i>
+                </button>
+            </div>
+
+            <!-- Кнопка сохранить -->
             <button onclick="savePersonalData()" class="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform" data-key="save_btn">
                 Сохранить
             </button>
+            
         </div>
     </div>
 
@@ -1389,18 +1663,16 @@
 
     <div id="screen-support-chat" class="hidden h-[100dvh] flex flex-col bg-white animate-slide-in absolute inset-0 z-50">
 
-        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50">
-
-            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50"><i class="fas fa-chevron-left text-gray-600"></i></button>
-
-            <h1 class="text-xl font-bold text-gray-900" id="chat-title" data-key="support_chat">Поддержка</h1>
-
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-white z-10 border-b border-gray-50 shadow-sm">
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50 active:scale-95 transition-colors"><i class="fas fa-chevron-left text-gray-600"></i></button>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-primary"><i class="fas fa-robot text-sm"></i></div>
+                <h1 class="text-xl font-bold text-gray-900" id="chat-title">Qamqor AI</h1>
+            </div>
         </div>
 
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-
-            <div class="flex justify-start"><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%]">Здравствуйте! Чем могу помочь?</div></div>
-
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 pb-6 space-y-4 bg-gray-50">
+            <div class="flex justify-start"><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%]">Здравствуйте! Я Qamqor AI — ваш умный медицинский помощник. Чем могу вам помочь?</div></div>
         </div>
 
         <div class="p-4 bg-white border-t border-gray-100 flex gap-2 sticky bottom-0 pb-8 sm:pb-4">
@@ -1523,6 +1795,144 @@
 
         </div>
     </div>
+        
+        <div id="screen-medications" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-slide-in">
+
+        <!-- Шапка (Кнопка назад слева и заголовок) -->
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-gray-50 z-10 border-b border-gray-200/60">
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-200 transition-colors active:scale-95">
+                <i class="fas fa-chevron-left text-gray-600"></i>
+            </button>
+            <h1 class="text-xl font-bold text-gray-900">Прием лекарств</h1>
+        </div>
+
+        <!-- Центральная часть (Пустое состояние) -->
+        <div class="flex-1 flex flex-col items-center justify-center p-6 text-center pb-32">
+            <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+                <i class="fas fa-prescription-bottle-alt text-4xl text-gray-300"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-700 mb-2">График пуст</h3>
+            <p class="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
+                Здесь будет отображаться ваш персональный график. Врач добавит сюда медикаменты и витамины сразу после консультации.
+            </p>
+        </div>
+        
+    </div>
+
+        <div id="screen-clinics" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-slide-in">
+        
+        <!-- Шапка с кнопкой Назад и фильтром города -->
+        <div class="px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 bg-white z-10 border-b border-gray-50">
+            
+            <div class="flex items-center gap-3">
+                <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-50 transition-colors active:scale-95">
+                    <i class="fas fa-chevron-left text-gray-600"></i>
+                </button>
+                <h1 class="text-xl font-bold text-gray-900">Клиники</h1>
+            </div>
+
+            <!-- Компактный фильтр городов (Без "Все города") -->
+            <div class="relative flex items-center text-gray-500 hover:text-gray-800 transition-colors cursor-pointer">
+                <i class="fas fa-map-marker-alt text-sm mr-1.5 pb-[1px]"></i>
+                <select id="clinic-city-select" onchange="filterClinicsByCity()" class="appearance-none bg-transparent font-medium text-sm outline-none cursor-pointer pr-4 z-10 relative">
+                    <option value="Астана">Астана</option>
+                    <option value="Алматы">Алматы</option>
+                    <option value="Шымкент">Шымкент</option>
+                    <option value="Актау">Актау</option>
+                </select>
+                <i class="fas fa-chevron-down text-[10px] absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400"></i>
+            </div>
+            
+        </div>
+
+        <!-- Контейнер для списка клиник -->
+        <div class="flex-1 overflow-y-auto p-6 pb-32 space-y-4 custom-scrollbar-y" id="clinics-list">
+             <!-- Сюда скрипт вставит 10 клиник выбранного города -->
+        </div>
+        
+    </div>
+        
+    <!-- УНИВЕРСАЛЬНЫЙ ЭКРАН В РАЗРАБОТКЕ -->
+    <div id="screen-coming-soon" class="hidden h-[100dvh] flex flex-col bg-gray-50 animate-slide-in relative z-40">
+        
+        <!-- Шапка -->
+        <div class="px-6 pt-12 pb-4 flex items-center gap-3 sticky top-0 bg-gray-50 z-10 border-b border-gray-200/60 flex-shrink-0">
+            <button onclick="goBack()" class="p-2 -ml-2 rounded-full hover:bg-gray-200 transition-colors active:scale-95">
+                <i class="fas fa-chevron-left text-gray-600"></i>
+            </button>
+            <h1 class="text-xl font-bold text-gray-900" id="cs-title">В разработке</h1>
+        </div>
+
+        <!-- Центральная часть -->
+        <div class="flex-1 flex flex-col items-center justify-center p-6 text-center pb-32">
+            <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+                <i id="cs-icon" class="fas fa-tools text-4xl text-gray-300"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-700 mb-2">Скоро появится!</h3>
+            <p id="cs-desc" class="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
+                Мы активно работаем над этим разделом. Совсем скоро здесь появится много полезного.
+            </p>
+        </div>
+        
+    </div>
+    
+    <!-- МОДАЛКА: ТРЕБУЕТСЯ АВТОРИЗАЦИЯ -->
+    <div id="modal-auth-required" class="hidden absolute inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onclick="if(event.target===this)this.classList.add('hidden')">
+        <div class="bg-white w-full max-w-[340px] p-8 rounded-[2rem] shadow-2xl text-center relative overflow-hidden">
+            <!-- Декоративный фон -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-teal-50 rounded-full opacity-50 pointer-events-none"></div>
+            
+            <div class="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-5 text-primary relative z-10 shadow-sm border border-teal-100">
+                <i class="fas fa-lock text-2xl"></i>
+            </div>
+            
+            <h3 class="text-xl font-extrabold mb-2 text-gray-900 relative z-10">Требуется вход</h3>
+            <p class="text-sm text-gray-500 mb-8 leading-relaxed relative z-10">Войдите или зарегистрируйтесь, чтобы получить полный доступ к сервисам QamqorMed.</p>
+            
+            <div class="flex flex-col gap-3 relative z-10">
+                <button onclick="document.getElementById('modal-auth-required').classList.add('hidden'); goToScreen('login');" class="w-full bg-primary text-white py-3.5 rounded-xl font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform">
+                    Войти в аккаунт
+                </button>
+                <button onclick="document.getElementById('modal-auth-required').classList.add('hidden'); goToScreen('register');" class="w-full bg-gray-50 text-gray-600 border border-gray-100 py-3.5 rounded-xl font-bold active:scale-95 transition-colors hover:bg-gray-100">
+                    Создать профиль
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- НОВАЯ ГЛОБАЛЬНАЯ НАВИГАЦИОННАЯ ПАНЕЛЬ -->
+    <div id="global-bottom-nav" class="hidden bg-white/85 backdrop-blur-lg rounded-t-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.05)] pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex justify-center gap-6 sm:gap-10 items-center absolute bottom-0 w-full z-50 border-t border-white/60">
+        
+        <button onclick="goToScreen('main', false, true); switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 text-primary transition-all duration-300 w-16 active:scale-95 group">
+            <div class="relative flex items-center justify-center h-7">
+                <i class="fas fa-home text-[22px] group-hover:-translate-y-0.5 transition-transform"></i>
+            </div>
+            <span class="text-[10px] font-bold tracking-wide">Главная</span>
+        </button>
+        
+        <button onclick="goToScreen('appointments')" id="nav-appointments" class="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-all duration-300 w-16 active:scale-95 group">
+            <div class="relative flex items-center justify-center h-7">
+                <i class="fas fa-calendar-alt text-[22px] group-hover:-translate-y-0.5 transition-transform"></i>
+            </div>
+            <span class="text-[10px] font-bold tracking-wide">Приёмы</span>
+        </button>
+        
+        <button onclick="goToScreen('main', false, true); switchTab('chat')" id="nav-chat" class="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-all duration-300 w-16 active:scale-95 group">
+            <div class="relative flex items-center justify-center h-7">
+                <i class="fas fa-comment-dots text-[22px] group-hover:-translate-y-0.5 transition-transform"></i>
+                <span class="absolute top-0 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white hidden" id="chat-nav-badge"></span>
+            </div>
+            <span class="text-[10px] font-bold tracking-wide">Чат</span>
+        </button>
+        
+        <button onclick="goToScreen('main', false, true); switchTab('services')" id="nav-services" class="flex flex-col items-center gap-1 text-gray-400 hover:text-primary transition-all duration-300 w-16 active:scale-95 group">
+            <div class="relative flex items-center justify-center h-7">
+                <i class="fas fa-layer-group text-[22px] group-hover:-translate-y-0.5 transition-transform"></i>
+            </div>
+            <span class="text-[10px] font-bold tracking-wide">Сервисы</span>
+        </button>
+
+    </div>
 
 </div>
 
@@ -1606,7 +2016,7 @@
 
             popular_directions: "Популярные направления", all: "Все", upcoming_consultations: "Предстоящие консультации", doctors_nearby: "Врачи рядом",
 
-            services: "Услуги", make_appointment: "Записаться к врачу", my_appointments: "Мои приёмы", vaccination_calendar: "Календарь вакцинации", faq_title: "Часто задаваемые вопросы", support_chat: "Чат поддержки",
+            services: "Сервисы", make_appointment: "Записаться к врачу", my_appointments: "Мои приёмы", vaccination_calendar: "Календарь вакцинации", faq_title: "Часто задаваемые вопросы", support_chat: "Чат поддержки",
 
             profile: "Профиль", personal_data: "Личные данные", settings: "Настройки", payment: "Оплата", logout: "Выйти",
 
@@ -1640,7 +2050,7 @@
 
             enter_call: "Войти в звонок", cancelled: "Отменён", cancel_appt: "Отменить", completed: "Завершен", notif_appt_title: "Приём перенесён", notif_appt_body: "Ваш приём к врачу Смиту перенесён на 15 декабря в 15:00.", notif_med_title: "Время лекарств", notif_med_body: "Не забудьте принять 50мг антибиотика после еды.", click_details: "Нажмите для деталей", details: "Детали", choose_city: "Выберите город",
 
-            chat_placeholder: "Сообщение...", search_placeholder: "Ищи врача, услугу...", add_btn: "Добавить", add_analysis_title: "Добавить анализ", analysis_type: "Тип анализа", select_type: "Выберите тип...", saved_success: "Анализ успешно сохранён", no_analyses: "Нет добавленных анализов", status_norm: "В норме", status_warn: "Отклонения", status_danger: "Критично",
+            chat_placeholder: "Сообщение...", search_placeholder: "Поиск по QamqorMed", add_btn: "Добавить", add_analysis_title: "Добавить анализ", analysis_type: "Тип анализа", select_type: "Выберите тип...", saved_success: "Анализ успешно сохранён", no_analyses: "Нет добавленных анализов", status_norm: "В норме", status_warn: "Отклонения", status_danger: "Критично",
 
         },
 
@@ -1686,7 +2096,7 @@
 
             enter_call: "Қоңырауға кіру", cancelled: "Болдырылмады", cancel_appt: "Болдырмау", completed: "Аяқталды", notif_appt_title: "Қабылдау ауыстырылды", notif_appt_body: "Дәрігер Смитке қабылдауыңыз 15 желтоқсан сағат 15:00-ге ауыстырылды.", notif_med_title: "Дәрі қабылдау уақыты", notif_med_body: "Тамақтан кейін 50мг антибиотик қабылдауды ұмытпаңыз.", click_details: "Толығырақ көру үшін басыңыз", details: "Мәліметтер", choose_city: "Қаланы таңдаңыз",
 
-            chat_placeholder: "Хабарлама...", search_placeholder: "Дәрігерді, қызметті іздеу...", add_btn: "Қосу", add_analysis_title: "Талдау қосу", analysis_type: "Талдау түрі", select_type: "Түрді таңдаңыз...", saved_success: "Талдау сәтті сақталды", no_analyses: "Қосылған талдаулар жоқ", status_norm: "Қалыпты", status_warn: "Ауытқулар", status_danger: "Критикалық",
+            chat_placeholder: "Хабарлама...", search_placeholder: "QamqorMed бойынша іздеу", add_btn: "Қосу", add_analysis_title: "Талдау қосу", analysis_type: "Талдау түрі", select_type: "Түрді таңдаңыз...", saved_success: "Талдау сәтті сақталды", no_analyses: "Қосылған талдаулар жоқ", status_norm: "Қалыпты", status_warn: "Ауытқулар", status_danger: "Критикалық",
 
         }
 
@@ -1744,73 +2154,41 @@
 
         switchApptTab('upcoming');
 
-        const mainScrollArea = document.getElementById('main-scroll-area');
-        const searchContainer = document.getElementById('search-container');
-        const headerTopRow = document.getElementById('main-header').firstElementChild;
-        const mainHeader = document.getElementById('main-header');
-
-        headerTopRow.style.transition = 'all 0.3s ease';
-        searchContainer.style.transition = 'all 0.3s ease';
-        mainHeader.style.transition = 'all 0.3s ease';
-
-        searchContainer.style.height = '48px';
-
-        let lastScrollTop = 0;
-        let isHeaderHidden = false;
-        const scrollDelta = 15; 
-
-        mainScrollArea.addEventListener('scroll', function() {
-            if (document.getElementById('tab-home').classList.contains('hidden')) return;
-
-            let scrollTop = mainScrollArea.scrollTop;
-            let scrollHeight = mainScrollArea.scrollHeight;
-            let clientHeight = mainScrollArea.clientHeight;
-            
-            // Вычисляем максимальный возможный скролл для текущего экрана
-            let maxScroll = scrollHeight - clientHeight;
-
-            // 1. Игнорируем отскоки за пределы экрана (overscroll на iOS)
-            let boundedScroll = Math.max(0, Math.min(scrollTop, maxScroll));
-
-            // 2. ЗАЩИТА ОТ БАГА ВНИЗУ: 
-            // Если мы дошли до самого низа (осталось меньше 20px), блокируем изменение 
-            // шапки, чтобы не вызывать бесконечный цикл изменения высоты.
-            if (boundedScroll >= maxScroll - 20) {
-                lastScrollTop = boundedScroll;
-                return;
-            }
-
-            if (Math.abs(lastScrollTop - boundedScroll) <= scrollDelta) return;
-
-            if (boundedScroll > lastScrollTop && boundedScroll > 60) {
-                if (!isHeaderHidden) {
-                    searchContainer.style.height = '0px';
-                    searchContainer.style.opacity = '0';
-                    searchContainer.style.pointerEvents = 'none';
-                    
-                    headerTopRow.classList.replace('mb-4', 'mb-1');
-                    mainHeader.classList.replace('pb-4', 'pb-2');
-                    
-                    isHeaderHidden = true;
-                }
-            } 
-            else if (boundedScroll < lastScrollTop) {
-                if (isHeaderHidden) {
-                    searchContainer.style.height = '48px';
-                    searchContainer.style.opacity = '1';
-                    searchContainer.style.pointerEvents = 'auto';
-                    
-                    headerTopRow.classList.replace('mb-1', 'mb-4');
-                    mainHeader.classList.replace('pb-2', 'pb-4');
-                    
-                    isHeaderHidden = false;
-                }
-            }
-            
-            lastScrollTop = boundedScroll; 
-        });
-
     });
+
+    function toggleGlobalNavVisibility(screenId) {
+        const globalNav = document.getElementById('global-bottom-nav');
+        // Экраны, где панели быть НЕ должно
+        const noNavScreens = ['splash', 'onboarding', 'login', 'register', 'forgot', 'admin-main', 'conduct-appointment', 'add-analysis', 'support-chat'];
+        
+        if (globalNav) {
+            if (noNavScreens.includes(screenId)) globalNav.classList.add('hidden');
+            else globalNav.classList.remove('hidden');
+        }
+
+        // Красим нужную кнопку
+        if (screenId === 'appointments') updateNavHighlight('appointments');
+        if (screenId === 'main') {
+            if (!document.getElementById('tab-home').classList.contains('hidden')) updateNavHighlight('home');
+            else if (!document.getElementById('tab-services').classList.contains('hidden')) updateNavHighlight('services');
+            else if (!document.getElementById('tab-chat').classList.contains('hidden')) updateNavHighlight('chat');
+        }
+    }
+
+    function updateNavHighlight(activeId) {
+        ['home', 'appointments', 'chat', 'services'].forEach(id => {
+            const btn = document.getElementById('nav-' + id);
+            if (btn) {
+                if (id === activeId) {
+                    btn.classList.remove('text-gray-400');
+                    btn.classList.add('text-primary');
+                } else {
+                    btn.classList.remove('text-primary');
+                    btn.classList.add('text-gray-400');
+                }
+            }
+        });
+    }
 
     // Универсальный генератор карточки врача
     function generateDoctorCard(doc) {
@@ -1830,6 +2208,9 @@
                 </button>
             </div>`;
     }
+
+    const citySelect = document.getElementById('city-filter-select');
+    if (citySelect) citySelect.value = 'all';
 
    function renderDoctors() {
         const homeGrid = document.getElementById('doctors-home-grid');
@@ -1868,6 +2249,128 @@
         // Применяем текущий язык к новым карточкам
         if (typeof changeLanguage === 'function') {
             changeLanguage(currentLang);
+        }
+    }
+
+    // 1. БАЗА ДАННЫХ КЛИНИК (По 10 гос. поликлиник и больниц на каждый город)
+    const clinicsData = [
+        // --- АСТАНА ---
+        { name: 'Городская поликлиника №1', address: 'ул. Сейфуллина, 28', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №2', address: 'ул. Желтоксан, 36', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №3', address: 'пр. Республики, 50', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №4', address: 'ул. Шевченко, 1', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №5', address: 'ул. Абая, 40', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №6', address: 'ул. Аманат, 3', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №7', address: 'пр. Ш. Кудайбердыулы, 25', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №8', address: 'ул. Сембинова, 4/1', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №9', address: 'ул. Жубанова, 16', city: 'Астана', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №10', address: 'ул. Кошкарбаева, 64', city: 'Астана', hours: '08:00 - 20:00' },
+        
+        // --- АЛМАТЫ ---
+        { name: 'Городская поликлиника №1', address: 'ул. Гоголя, 53', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №2', address: 'ул. Толе би, 156', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №3', address: 'ул. Розыбакиева, 73', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №4', address: 'мкр. Жетысу-2, 11А', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №5', address: 'ул. Макатаева, 141', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №6', address: 'ул. Сейфуллина, 400', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №7', address: 'мкр. Айнабулак-3, 103', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №8', address: 'ул. Тургута Озала, 239', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №9', address: 'ул. Жамбыла, 115', city: 'Алматы', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №10', address: 'мкр. Аксай-4, 17', city: 'Алматы', hours: '08:00 - 20:00' },
+
+        // --- ШЫМКЕНТ ---
+        { name: 'Городская поликлиника №1', address: 'пр. Тауке хана, 43', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №2', address: 'ул. Иляева, 30', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №3', address: 'мкр. Нурсат, 24', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №4', address: 'ул. Гагарина, 15', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №5', address: 'мкр. Сайрам, 10', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №6', address: 'ул. Байтурсынова, 88', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №7', address: 'мкр. Восток, 14', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №8', address: 'ул. Желтоксан, 20', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №9', address: 'ул. Адырбекова, 112', city: 'Шымкент', hours: '08:00 - 20:00' },
+        { name: 'Городская поликлиника №10', address: 'ул. Рыскулова, 50', city: 'Шымкент', hours: '08:00 - 20:00' },
+
+        // --- АКТАУ ---
+        { name: 'Актауская городская поликлиника №1', address: '7-й микрорайон, зд. 1', city: 'Актау', hours: '08:00 - 20:00' },
+        { name: 'Актауская городская поликлиника №2', address: '26-й микрорайон, 12', city: 'Актау', hours: '08:00 - 20:00' },
+        { name: 'Областная многопрофильная больница', address: '26-й микрорайон, 51', city: 'Актау', hours: 'Круглосуточно' },
+        { name: 'Областная детская больница', address: '26-й микрорайон, 50', city: 'Актау', hours: 'Круглосуточно' },
+        { name: 'Мангистауский перинатальный центр', address: '34-й микрорайон, 1', city: 'Актау', hours: 'Круглосуточно' },
+        { name: 'МЦ Сенім (Гос. заказ)', address: '26-й микрорайон, 12/1', city: 'Актау', hours: '08:00 - 20:00' },
+        { name: 'Центр ПМСП №1', address: '14-й микрорайон, 3', city: 'Актау', hours: '08:00 - 20:00' },
+        { name: 'Центр ПМСП №2', address: '11-й микрорайон, 15', city: 'Актау', hours: '08:00 - 20:00' },
+        { name: 'МЦ Нейрон (Поликлиническое отд.)', address: '14-й микрорайон, 61', city: 'Актау', hours: '08:00 - 20:00' },
+        { name: 'МЦ Мунайлинской ЦРБ (Филиал)', address: '29-й микрорайон', city: 'Актау', hours: '08:00 - 20:00' }
+    ];
+
+    // 2. ФУНКЦИЯ ОТРИСОВКИ КЛИНИК
+    function filterClinicsByCity() {
+        const citySelect = document.getElementById('clinic-city-select');
+        const selectedCity = citySelect ? citySelect.value : 'Астана'; // Астана по умолчанию
+        const listContainer = document.getElementById('clinics-list');
+
+        if (!listContainer) return;
+
+        // Оставляем только клиники выбранного города
+        const filtered = clinicsData.filter(c => c.city === selectedCity);
+
+        if (filtered.length > 0) {
+            listContainer.innerHTML = filtered.map(clinic => {
+                const is24h = clinic.hours.includes('Круглосуточно');
+                const badgeClass = is24h ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50';
+                
+                return `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4 active:scale-[0.98] transition-all cursor-pointer">
+                    <div class="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0 text-primary">
+                        <i class="fas ${is24h ? 'fa-hospital-alt' : 'fa-clinic-medical'} text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-900 text-sm leading-tight">${clinic.name}</h4>
+                        <p class="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
+                            <i class="fas fa-map-marker-alt text-gray-300"></i> ${clinic.address}
+                        </p>
+                        <div class="flex items-center mt-2.5">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${badgeClass}">${clinic.hours}</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-300 text-xs self-center"></i>
+                </div>`;
+            }).join('');
+        } else {
+            listContainer.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm">В этом городе пока нет клиник</div>`;
+        }
+    }
+
+    // 3. Вызываем функцию один раз при старте, чтобы заполнить Астану
+    document.addEventListener('DOMContentLoaded', () => {
+        filterClinicsByCity();
+    });
+
+    function filterDoctorsByCity() {
+        const citySelect = document.getElementById('city-filter-select');
+        const selectedCity = citySelect ? citySelect.value : 'all';
+        const allGrid = document.getElementById('all-doctors-grid');
+
+        if (!allGrid) return;
+
+        // Берем весь список врачей
+        let filtered = doctors;
+
+        // 1. Оставляем только нужную категорию (если мы зашли через неё)
+        if (activeDoctorCategory) {
+            filtered = filtered.filter(d => d.spec === activeDoctorCategory);
+        }
+
+        // 2. Оставляем только выбранный город
+        if (selectedCity !== 'all') {
+            filtered = filtered.filter(d => d.city === selectedCity);
+        }
+
+        // Отрисовываем сетку
+        if (filtered.length > 0) {
+            allGrid.innerHTML = filtered.map(generateDoctorCard).join('');
+        } else {
+            allGrid.innerHTML = `<div class="col-span-2 text-center text-gray-400 py-10 text-sm">В этом городе нет таких специалистов</div>`;
         }
     }
 
@@ -2270,7 +2773,8 @@
         goToScreen('doctor-detail');
         changeLanguage(currentLang); 
     }
-function openBookingModal() {
+    function openBookingModal() {
+        if (!checkAuth()) return;
 
         if(!currentDoctorIin) return;
 
@@ -2341,15 +2845,14 @@ function openBookingModal() {
         `).join('');
 
         document.getElementById('modal-booking').classList.remove('hidden');
-
+        document.getElementById('global-bottom-nav').classList.add('hidden'); // Скрыли
         changeLanguage(currentLang);
 
     }
 
     function closeBookingModal() {
-
         document.getElementById('modal-booking').classList.add('hidden');
-
+        document.getElementById('global-bottom-nav').classList.remove('hidden'); // Вернули
     }
 
     function selectBookingDate(el, date) {
@@ -2718,7 +3221,7 @@ function openBookingModal() {
 
             <div class="flex-1">
 
-                <h3 class="font-bold text-gray-900" data-key="support_chat">Поддержка</h3>
+                <h3 class="font-bold text-gray-900">Qamqor AI</h3>
 
                 <p class="text-xs text-gray-500 truncate">Здравствуйте! Чем могу помочь?</p>
 
@@ -2782,73 +3285,71 @@ function openBookingModal() {
 
     }
 
-    function filterByCategory(category) {
-        document.getElementById('all-doctors-title').innerText = category;
-        const filtered = doctors.filter(d => d.spec === category);
-        const allGrid = document.getElementById('all-doctors-grid');
+   // Переменная для памяти: какую категорию мы сейчас смотрим
+    let activeDoctorCategory = null;
 
-        if(allGrid) {
-            allGrid.innerHTML = filtered.length > 0 
-                ? filtered.map(generateDoctorCard).join('') 
-                : '<div class="col-span-2 text-center text-gray-400 py-10" data-key="empty">Ничего не найдено</div>';
-        }
+    function filterByCategory(category) {
+        activeDoctorCategory = category; // Запоминаем категорию
+        
+        // Меняем заголовок на название категории
+        const titleEl = document.getElementById('all-doctors-title');
+        titleEl.innerText = category;
+        titleEl.removeAttribute('data-key'); // Убираем ключ, чтобы переводчик не вернул "Врачи рядом"
+
+        // Запускаем общий фильтр
+        filterDoctorsByCity();
+        
         goToScreen('all-doctors');
-        changeLanguage(currentLang);
     }
 
    function loadUserState() {
         const hasSession = localStorage.getItem('qamqorSession');
         const savedAccount = localStorage.getItem('qamqorAccount');
+        const splashShown = sessionStorage.getItem('splashShown');
 
+        // 1. Проверяем, есть ли сессия
         if (hasSession === 'active' && savedAccount) {
-            // СРАЗУ достаем пользователя
             currentUser = JSON.parse(savedAccount);
             updateProfileUI();
             fetchAppointments();
             renderDynamicNotifications();
-
-            // Проверяем, показывали ли мы уже заставку в этой вкладке браузера?
-            const splashShown = sessionStorage.getItem('splashShown');
-
-            if (!splashShown) {
-                // 1. Заставку еще не показывали -> ПОКАЗЫВАЕМ
-                document.getElementById('screen-splash').classList.remove('hidden');
-                document.getElementById('screen-splash').style.display = 'flex';
-                
-                setTimeout(() => {
-                    document.getElementById('screen-splash').classList.add('hidden');
-                    document.getElementById('screen-splash').style.display = 'none';
-                    
-                    // Запоминаем, что заставка показана!
-                    sessionStorage.setItem('splashShown', 'true');
-                    
-                    navHistory = []; 
-                    if (currentUser.role === 'admin') {
-                        goToScreen('admin-main', false);
-                        fetchAdminUsers(); // Загружаем список
-                    } else if (currentUser.role === 'doctor') {
-                        goToScreen('doctor-main', false);
-                    } else {
-                        goToScreen('main', false);
-                    }
-                }, 2000);
-            } else {
-                // 2. Заставку УЖЕ показывали (человек просто обновил страницу) -> ПРОПУСКАЕМ
-                navHistory = []; 
-                    if (currentUser.role === 'admin') {
-                        goToScreen('admin-main', false);
-                        fetchAdminUsers(); // Загружаем список
-                    } else if (currentUser.role === 'doctor') {
-                        goToScreen('doctor-main', false);
-                    } else {
-                        goToScreen('main', false);
-                    }
-            }
-
         } else {
-            goToScreen('onboarding', false);
-            updateOnboardingUI();
-            renderDynamicNotifications();
+            currentUser = null; // Включаем режим Гостя!
+        }
+
+        // 2. Логика показа заставки и перехода
+        if (!splashShown) {
+            document.getElementById('screen-splash').classList.remove('hidden');
+            document.getElementById('screen-splash').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('screen-splash').classList.add('hidden');
+                document.getElementById('screen-splash').style.display = 'none';
+                sessionStorage.setItem('splashShown', 'true');
+                
+                navHistory = []; 
+                routeUserAfterLoad();
+            }, 2000);
+        } else {
+            navHistory = []; 
+            routeUserAfterLoad();
+        }
+    }
+
+    // Вспомогательная функция, решающая, куда направить пользователя после заставки
+    function routeUserAfterLoad() {
+        if (currentUser) {
+            if (currentUser.role === 'admin') {
+                goToScreen('admin-main', false);
+                fetchAdminUsers();
+            } else if (currentUser.role === 'doctor') {
+                goToScreen('doctor-main', false);
+            } else {
+                goToScreen('main', false);
+            }
+        } else {
+            // ДЛЯ ГОСТЯ: сразу открываем главную страницу!
+            goToScreen('main', false);
         }
     }
 
@@ -3019,7 +3520,62 @@ function openBookingModal() {
 
     // NAVIGATION SYSTEM
 
+    function openPersonalData(fromMedcard = false) {
+        if (!checkAuth()) return;
+        const extraBtn = document.getElementById('medcard-extra-buttons');
+        const titleEl = document.getElementById('personal-data-title');
+        
+        if(extraBtn) {
+            if(fromMedcard) {
+                // Если зашли через "Медкарту", показываем кнопки анализов/вакцинации
+                extraBtn.classList.remove('hidden');
+                if (titleEl) {
+                    titleEl.innerText = "Медкарта";
+                    titleEl.removeAttribute('data-key'); // Отключаем переводчик, чтобы не затер
+                }
+            } else {
+                // Если зашли через обычный "Профиль", прячем лишнее
+                extraBtn.classList.add('hidden');
+                if (titleEl) {
+                    titleEl.innerText = translations[currentLang]?.personal_data || "Личные данные";
+                    titleEl.setAttribute('data-key', 'personal_data'); // Возвращаем ключ перевода
+                }
+            }
+        }
+        
+        goToScreen('personal-data');
+    }
+
+    // Умная заглушка для новых разделов
+    function openComingSoon(title, iconClass, description) {
+        if (!checkAuth()) return;
+        document.getElementById('cs-title').innerText = title;
+        document.getElementById('cs-icon').className = iconClass + ' text-4xl text-gray-300';
+        
+        if (description) {
+            document.getElementById('cs-desc').innerText = description;
+        } else {
+            document.getElementById('cs-desc').innerText = "Мы активно работаем над этим разделом. Совсем скоро здесь появится много полезного.";
+        }
+        
+        goToScreen('coming-soon');
+    }
+
+    // Проверка авторизации (Охранник)
+    function checkAuth() {
+        if (!currentUser) {
+            document.getElementById('modal-auth-required').classList.remove('hidden');
+            return false;
+        }
+        return true;
+    }
+
     function goToScreen(screenId, animate = true, resetHistory = false) {
+        const publicScreens = ['splash', 'onboarding', 'login', 'register', 'forgot', 'main', 'all-doctors', 'doctor-detail', 'clinics', 'faq', 'all-categories'];
+        if (!currentUser && !publicScreens.includes(screenId)) {
+            document.getElementById('modal-auth-required').classList.remove('hidden');
+            return;
+        }
 
         // Find current screen
 
@@ -3059,6 +3615,8 @@ function openBookingModal() {
 
             if (screenId === 'main' && navHistory.length === 0) switchTab('home');
 
+            toggleGlobalNavVisibility(screenId);
+
         }
 
     }
@@ -3087,6 +3645,8 @@ function openBookingModal() {
 
             }
 
+            toggleGlobalNavVisibility(prevScreen);
+
         } else {
 
             // Default fallbacks if history empty
@@ -3102,65 +3662,38 @@ function openBookingModal() {
     }
 
     function switchTab(tabName) {
-
-        ['home', 'services', 'chat', 'profile'].forEach(t => {
-
-            document.getElementById('tab-' + t).classList.add('hidden');
-
-            const navBtn = document.getElementById('nav-' + t);
-
-            navBtn.classList.remove('text-primary'); 
-
-            navBtn.classList.add('text-gray-400');
-
-            const iconMap = { home: 'home', services: 'folder', chat: 'comment-dots', profile: 'user' };
-
-            if (t === 'home') navBtn.innerHTML = `<div class="w-10 h-10 rounded-full bg-dark flex items-center justify-center text-white shadow-glow"><i class="fas fa-home"></i></div>`;
-
-            else navBtn.innerHTML = `<i class="far fa-${iconMap[t]} text-xl"></i>`;
-
-        });
-
-        document.getElementById('tab-' + tabName).classList.remove('hidden');
-
-        document.getElementById('tab-' + tabName).classList.add('animate-fade-in');
-
-        const activeNav = document.getElementById('nav-' + tabName);
-
-        activeNav.classList.remove('text-gray-400');
-
-        activeNav.classList.add('text-primary');
-
-        const iconMap = { home: 'home', services: 'folder', chat: 'comment-dots', profile: 'user' };
-
-        if (tabName !== 'home') activeNav.innerHTML = `<i class="fas fa-${iconMap[tabName]} text-xl"></i>`;
-
-        // Toggle Search Visibility
-
-        const searchContainer = document.getElementById('search-container');
-
-        if (tabName === 'home') {
-
-            searchContainer.style.height = '48px';
-
-            searchContainer.style.opacity = '1';
-
-            searchContainer.style.pointerEvents = 'auto';
-
-            searchContainer.style.marginTop = '0';
-
-        } else {
-
-            searchContainer.style.height = '0';
-
-            searchContainer.style.opacity = '0';
-
-            searchContainer.style.pointerEvents = 'none';
-
-            searchContainer.style.marginTop = '-10px';
-
+        if (!currentUser && tabName !== 'home') {
+            document.getElementById('modal-auth-required').classList.remove('hidden');
+            return;
         }
 
+        ['home', 'services', 'chat', 'profile'].forEach(t => {
+            const tabEl = document.getElementById('tab-' + t);
+            if (tabEl) tabEl.classList.add('hidden');
+        });
+
+        const activeTab = document.getElementById('tab-' + tabName);
+        if (activeTab) {
+            activeTab.classList.remove('hidden');
+            activeTab.classList.add('animate-fade-in');
+        }
+
+        // Вызываем покраску кнопок
+        updateNavHighlight(tabName);
+
+        const searchContainer = document.getElementById('main-header');
+        if (searchContainer) {
+            if (tabName === 'home') {
+                // Возвращаем шапку на место
+                searchContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    searchContainer.classList.remove('-translate-y-full', 'opacity-0', 'pointer-events-none');
+                }, 10);
+            } else {
+                // Полностью скрываем шапку поиска, убирая пустую зону!
+                searchContainer.classList.add('hidden', '-translate-y-full', 'opacity-0', 'pointer-events-none');
+            }
+        }
     }
 
     currentStep = 0;
@@ -4080,11 +4613,12 @@ async function initDoctors() {
     let currentChatReceiver = null;
 
     function openSupportChat() {
+        if (!checkAuth()) return;
         currentChatReceiver = 'support';
-        document.getElementById('chat-title').innerText = "Поддержка";
-        document.getElementById('chat-messages').innerHTML = `<div class="text-center text-gray-400 mt-10"><i class="fas fa-spinner fa-spin"></i> Загрузка истории...</div>`;
+        document.getElementById('chat-title').innerText = "Qamqor AI"; // Убрали Поддержку
+        document.getElementById('chat-messages').innerHTML = `<div class="text-center text-gray-400 mt-10"><i class="fas fa-spinner fa-spin"></i> Загрузка диалога...</div>`;
         goToScreen('support-chat');
-        fetchChatHistory(); // Загружаем историю ровно 1 раз
+        fetchChatHistory(); 
     }
 
     async function fetchChatHistory() {
@@ -4134,7 +4668,7 @@ async function initDoctors() {
         
         // Рисуем индикатор "ИИ печатает..."
         const loadingId = 'loading-' + Date.now();
-        container.innerHTML += `<div id="${loadingId}" class="flex justify-start animate-fade-in"><div class="bg-gray-100 text-gray-500 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2 flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> Поддержка печатает...</div></div>`;
+        container.innerHTML += `<div id="${loadingId}" class="flex justify-start animate-fade-in"><div class="bg-gray-100 text-gray-500 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2 flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> Qamqor AI печатает...</div></div>`;
         
         input.value = '';
         container.scrollTop = container.scrollHeight;
