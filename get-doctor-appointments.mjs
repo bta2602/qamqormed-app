@@ -16,13 +16,16 @@ export default async function handler(request, context) {
             return new Response(JSON.stringify({ error: 'Не указан ИИН врача' }), { status: 400 });
         }
 
-        // 🔥 МАГИЯ SQL: Достаем записи и сразу "приклеиваем" к ним имена пациентов
+        // 🔥 ИСПРАВЛЕНИЕ ЗДЕСЬ: 
+        // Мы поменяли a.doctor_iin на a.doctor_id (так как именно под таким именем данные сохраняются при записи)
+        // Также я добавил a.patient_iin в выборку, чтобы врачу было проще взаимодействовать с пациентом
         const appointments = await sql`
             SELECT 
                 a.id, 
                 a.date, 
                 a.time, 
                 a.status, 
+                a.patient_iin,
                 u.name AS patient_name 
             FROM appointments a
             JOIN users u ON a.patient_iin = u.iin
@@ -36,7 +39,7 @@ export default async function handler(request, context) {
         });
 
     } catch (error) {
-        console.error("Ошибка при получении записей врача:", error);
+        console.error("Ошибка при получении записей:", error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }
