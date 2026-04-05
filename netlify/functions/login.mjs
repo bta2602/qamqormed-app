@@ -13,7 +13,7 @@ export default async function handler(request, context) {
 
         // Ищем в базе пользователя с такой почтой и паролем
         const result = await sql`
-            SELECT id, name, email, iin, role 
+           SELECT id, name, email, iin, role, spec, img, city, exp, bio, rating
             FROM users 
             WHERE email = ${email} AND password = ${password}
         `;

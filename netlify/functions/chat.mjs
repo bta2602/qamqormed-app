@@ -31,28 +31,56 @@ export default async function handler(request, context) {
                 if (!apiKey) {
                     replyText = "Автоответчик: Система ИИ не подключена (нужен API ключ в настройках Netlify).";
                 } else {
-                    const systemPrompt = `
-Ты — умный ИИ-ассистент клиники QamqorMed. 
-Твоя цель: общаться с пациентом и, если он хочет записаться к врачу, собрать 3 параметра: специальность врача, дату и время.
-Если пациент не назвал все три параметра — вежливо уточни их.
-Если пациент назвал всё и подтверждает запись — ставь флаг makeBooking: true.
+                    
+                    // ДОСТАЕМ ИСТОРИЮ ЧАТА (последние 10 сообщений для лучшего контекста)
+                    const historyMsgs = await sql`
+                        SELECT sender, text FROM chat_messages 
+                        WHERE (sender = ${sender} AND receiver = 'support') 
+                           OR (sender = 'support' AND receiver = ${sender})
+                        ORDER BY created_at DESC
+                        LIMIT 10;
+                    `;
+                    
+                    historyMsgs.reverse(); 
+                    
+                    let dialogHistory = "";
+                    historyMsgs.forEach(msg => {
+                        const role = msg.sender === 'support' ? 'ИИ' : 'Пациент';
+                        let cleanText = msg.text.replace(/✅ \*Система:.*?\*/g, '').trim();
+                        dialogHistory += `${role}: ${cleanText}\n`;
+                    });
 
-ВНИМАНИЕ! Твой ответ ВСЕГДА должен быть строгим JSON-объектом такого формата:
+                    // ЖЕСТКИЙ ПРОМПТ ПРОТИВ ЗАЦИКЛИВАНИЯ
+                    const systemPrompt = `Ты — умный ИИ-администратор клиники QamqorMed. 
+Твоя задача — записать пациента к врачу. Для этого нужно узнать 3 параметра:
+1. Специальность врача (Стоматолог, Невролог, Хирург и т.д.)
+2. Дата приема (например: завтра, 15 апреля)
+3. Время приема (например: 10:00, утром)
+
+Вот история вашей беседы:
+${dialogHistory}
+
+ВНИМАТЕЛЬНО ПРОЧИТАЙ ИСТОРИЮ ВЫШЕ!
+Если пациент УЖЕ называл специальность ранее, ЗАПОМНИ ЕЕ и не спрашивай снова!
+Если он УЖЕ назвал дату, ЗАПОМНИ ЕЕ!
+Спрашивай ТОЛЬКО те данные, которых не хватает.
+Если пациент назвал все 3 параметра (Специальность, Дата, Время) - переспроси: "Вы подтверждаете запись к [Специальность] на [Дата] в [Время]?".
+Если пациент ответил согласием (Да, подтверждаю) - ставь "makeBooking": true.
+
+Твой ответ ВСЕГДА должен быть строгим JSON-объектом:
 {
-  "replyText": "Твой ответ пациенту (человеческим языком)",
+  "replyText": "Твой ответ пациенту",
   "makeBooking": false,
   "bookingData": {
-      "spec": "название специальности врача (если есть)",
-      "date": "дата приема (если есть)",
-      "time": "время приема (если есть)"
+      "spec": "найденная в истории специальность или пусто",
+      "date": "найденная в истории дата или пусто",
+      "time": "найденное в истории время или пусто"
   }
 }
-Отвечай ТОЛЬКО форматом JSON, без лишнего текста и без кавычек markdown.
-Вопрос от пациента: "${text}"
-                    `;
+ОТВЕЧАЙ ТОЛЬКО ФОРМАТОМ JSON. Без лишнего текста, без кавычек \`\`\`json.`;
 
                     try {
-                        const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                        const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -63,25 +91,26 @@ export default async function handler(request, context) {
                         
                         const aiData = await aiResponse.json();
 
-                        // ЗАЩИТА ОТ ОШИБОК API
                         if (!aiResponse.ok) {
                             replyText = `Ошибка ИИ: ${aiData.error?.message || 'Неизвестная ошибка'}`;
                         } else {
-                            const aiJsonStr = aiData.candidates[0].content.parts[0].text;
+                            // ОЧИСТКА МАРКДАУН-КАВЫЧЕК (Очень частая причина сбоев)
+                            let aiJsonStr = aiData.candidates[0].content.parts[0].text;
+                            aiJsonStr = aiJsonStr.replace(/```json/gi, '').replace(/```/g, '').trim();
+                            
                             const parsedAI = JSON.parse(aiJsonStr);
                             replyText = parsedAI.replyText;
 
-                            // МАГИЯ: ЕСЛИ ИИ РЕШИЛ ЗАПИСАТЬ ПАЦИЕНТА
                             if (parsedAI.makeBooking === true && parsedAI.bookingData) {
                                 const bData = parsedAI.bookingData;
-                                // Ищем врача нужной специальности
                                 const doctors = await sql`SELECT iin, name FROM users WHERE role = 'doctor' AND spec ILIKE ${'%' + bData.spec + '%'} LIMIT 1`;
                                 
                                 if (doctors.length > 0) {
                                     const doctor = doctors[0];
+                                    // ОБНОВЛЕННЫЙ INSERT С УЧЕТОМ НОВЫХ КОЛОНОК БАЗЫ ДАННЫХ
                                     await sql`
-                                        INSERT INTO appointments (patient_iin, doctor_iin, date, time, status) 
-                                        VALUES (${sender}, ${doctor.iin}, ${bData.date}, ${bData.time}, 'pending')
+                                        INSERT INTO appointments (patient_iin, doctor_iin, date, time, type, message, status) 
+                                        VALUES (${sender}, ${doctor.iin}, ${bData.date}, ${bData.time}, 'clinic', 'Запись через ИИ-чат', 'upcoming')
                                     `;
                                     replyText += `\n\n✅ *Система: Вы успешно записаны к врачу ${doctor.name} на ${bData.date} в ${bData.time}.*`;
                                 } else {
@@ -91,11 +120,10 @@ export default async function handler(request, context) {
                         }
                     } catch (err) {
                         console.error("Ошибка обработки ИИ:", err);
-                        replyText = "Извините, произошла техническая ошибка при ответе.";
+                        replyText = "Извините, произошел технический сбой (ИИ вернул неверный формат). Пожалуйста, повторите ответ.";
                     }
                 }
 
-                // Сохраняем итоговый ответ в чат
                 await sql`INSERT INTO chat_messages (sender, receiver, text) VALUES ('support', ${sender}, ${replyText})`;
             }
 
@@ -118,5 +146,4 @@ export default async function handler(request, context) {
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
-
 }

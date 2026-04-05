@@ -11,7 +11,7 @@ export default async function handler(request, context) {
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT 'Астана'`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS exp VARCHAR(50) DEFAULT '5 лет'`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT 'Квалифицированный специалист.'`;
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS img TEXT DEFAULT 'https://i.pravatar.cc/150'`;
+        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS img TEXT DEFAULT 'https://res.cloudinary.com/dr1ewnxpp/image/upload/v1775378385/file_000000001044720b99a06f6e4900d8fe_kq3zco.png'`;
         await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS rating NUMERIC(3,1) DEFAULT 5.0`;
 
         // Скачиваем из базы только тех, у кого роль 'doctor'
