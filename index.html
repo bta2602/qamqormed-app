@@ -3205,6 +3205,12 @@
         }).join('');
     }
 
+    // Escape HTML text content only, not JavaScript or URL/attribute contexts.
+    function escapeHTMLtext(value) {
+        const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(value ?? '').replace(/[&<>"']/g, character => entities[character]);
+    }
+
     function renderChats() {
 
         const list = document.getElementById('chats-list');
@@ -3247,9 +3253,9 @@
 
                     <div class="flex-1">
 
-                        <h3 class="font-bold text-gray-900">${doc.name}</h3>
+                        <h3 class="font-bold text-gray-900">${escapeHTMLtext(doc.name)}</h3>
 
-                        <p class="text-xs text-gray-500 truncate">${c.lastMsg}</p>
+                        <p class="text-xs text-gray-500 truncate">${escapeHTMLtext(c.lastMsg)}</p>
 
                     </div>
 
@@ -3275,7 +3281,7 @@
 
         document.getElementById('chat-messages').innerHTML = `
 
-            <div class="flex justify-end"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${chat.lastMsg}</div></div>
+            <div class="flex justify-end"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${escapeHTMLtext(chat.lastMsg)}</div></div>
 
             <div class="flex justify-start"><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">Здравствуйте! Жду вас на приеме.</div></div>
 
@@ -3302,19 +3308,27 @@
         goToScreen('all-doctors');
     }
 
-   function loadUserState() {
+   async function loadUserState() {
         const hasSession = localStorage.getItem('qamqorSession');
         const savedAccount = localStorage.getItem('qamqorAccount');
         const splashShown = sessionStorage.getItem('splashShown');
 
         // 1. Проверяем, есть ли сессия
-        if (hasSession === 'active' && savedAccount) {
-            currentUser = JSON.parse(savedAccount);
+        let verifiedUser = null;
+        try {
+            const response = await fetch('/.netlify/functions/session', { credentials: 'same-origin' });
+            if (response.ok) verifiedUser = (await response.json()).user;
+        } catch { /* A local profile is never proof of an authenticated session. */ }
+        if (verifiedUser) {
+            currentUser = verifiedUser;
+            localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
             updateProfileUI();
             fetchAppointments();
             renderDynamicNotifications();
         } else {
-            currentUser = null; // Включаем режим Гостя!
+            currentUser = null;
+            localStorage.removeItem('qamqorAccount');
+            localStorage.removeItem('qamqorSession');
         }
 
         // 2. Логика показа заставки и перехода
@@ -3355,9 +3369,9 @@
 
     function saveUser(name, email, password, iin) {
         // По умолчанию все новые регистрации — это пациенты
-        currentUser = { name, email, password, iin, role: 'patient' }; 
-        localStorage.setItem('qamqorAccount', JSON.stringify(currentUser)); 
-        localStorage.setItem('qamqorSession', 'active'); 
+        currentUser = { name, email, iin, role: 'patient' };
+        localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
+        localStorage.setItem('qamqorSession', 'active');
         updateProfileUI();
     }
 
@@ -3835,12 +3849,17 @@
         }
     }
 
-    function handleForgot(e) { e.preventDefault(); showToast('Инструкции отправлены на почту!'); goToScreen('login'); }
+    function handleForgot(e) { e.preventDefault(); showToast('Восстановление по почте пока недоступно. Обратитесь в поддержку.', 'error'); }
 
-    function handleLogout() { 
-        localStorage.removeItem('qamqorSession'); 
+    async function handleLogout() {
+        try {
+            const response = await fetch('/.netlify/functions/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+            if (!response.ok) throw new Error('logout');
+        } catch { showToast('Не удалось завершить сессию. Проверьте соединение.', 'error'); return; }
+        localStorage.removeItem('qamqorAccount');
+        localStorage.removeItem('qamqorSession');
         sessionStorage.removeItem('splashShown'); // Забываем, что показывали заставку
-        currentUser = null; 
+        currentUser = null;
         currentStep = 0; 
         goToScreen('onboarding', true, true); 
         updateOnboardingUI(); 
@@ -3883,9 +3902,9 @@
             const result = await response.json();
 
             if (response.ok) {
-                currentUser.password = newPass;
+                delete currentUser.password;
                 localStorage.setItem('qamqorAccount', JSON.stringify(currentUser));
-                
+
                 showToast(result.message);
                 document.getElementById('old-pass').value = '';
                 document.getElementById('new-pass').value = '';
@@ -4198,7 +4217,7 @@
 
         const container = document.getElementById('chat-messages');
 
-        container.innerHTML += `<div class="flex justify-end"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${text}</div></div>`;
+        container.innerHTML += `<div class="flex justify-end"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${escapeHTMLtext(text)}</div></div>`;
 
         input.value = '';
 
@@ -4648,9 +4667,9 @@ async function initDoctors() {
 
         container.innerHTML = messages.map(msg => {
             if (msg.sender === currentUser.iin) {
-                return `<div class="flex justify-end animate-fade-in"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${msg.text}</div></div>`;
+                return `<div class="flex justify-end animate-fade-in"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${escapeHTMLtext(msg.text)}</div></div>`;
             } else {
-                return `<div class="flex justify-start animate-fade-in"><div class="bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">${msg.text}</div></div>`;
+                return `<div class="flex justify-start animate-fade-in"><div class="bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">${escapeHTMLtext(msg.text)}</div></div>`;
             }
         }).join('');
         container.scrollTop = container.scrollHeight;
@@ -4662,10 +4681,10 @@ async function initDoctors() {
         if (!text || !currentUser || !currentChatReceiver) return;
 
         const container = document.getElementById('chat-messages');
-        
+
         // Рисуем сообщение пользователя
-        container.innerHTML += `<div class="flex justify-end animate-fade-in"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${text}</div></div>`;
-        
+        container.innerHTML += `<div class="flex justify-end animate-fade-in"><div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[80%] mb-2">${escapeHTMLtext(text)}</div></div>`;
+
         // Рисуем индикатор "ИИ печатает..."
         const loadingId = 'loading-' + Date.now();
         container.innerHTML += `<div id="${loadingId}" class="flex justify-start animate-fade-in"><div class="bg-gray-100 text-gray-500 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2 flex items-center gap-2"><i class="fas fa-circle-notch fa-spin"></i> Qamqor AI печатает...</div></div>`;
@@ -4687,7 +4706,7 @@ async function initDoctors() {
 
             if (response.ok && data.reply) {
                 // Рисуем ответ от ИИ
-                container.innerHTML += `<div class="flex justify-start animate-fade-in"><div class="bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">${data.reply}</div></div>`;
+                container.innerHTML += `<div class="flex justify-start animate-fade-in"><div class="bg-white text-gray-800 p-3 rounded-2xl rounded-tl-none shadow-sm text-sm max-w-[80%] mb-2">${escapeHTMLtext(data.reply)}</div></div>`;
                 container.scrollTop = container.scrollHeight;
             }
         } catch (e) {

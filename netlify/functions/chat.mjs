@@ -1,149 +1,60 @@
-import { neon } from '@netlify/neon';
+import { endpoint, authenticate, requireRole, requirePatientAccess, throttle, text, fail, json } from '../lib/security.mjs';
 
-export default async function handler(request, context) {
-    if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405 });
-
-    const sql = neon();
-
-    try {
-        const data = await request.json();
-        const { action, sender, receiver, text } = data;
-
-        await sql`
-            CREATE TABLE IF NOT EXISTS chat_messages (
-                id SERIAL PRIMARY KEY,
-                sender VARCHAR(50) NOT NULL,
-                receiver VARCHAR(50) NOT NULL,
-                text TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `;
-
-        // 1. ОТПРАВКА СООБЩЕНИЯ
-        if (action === 'send') {
-            await sql`INSERT INTO chat_messages (sender, receiver, text) VALUES (${sender}, ${receiver}, ${text})`;
-
-            let replyText = "";
-
-            if (receiver === 'support') {
-                const apiKey = process.env.GEMINI_API_KEY;
-                
-                if (!apiKey) {
-                    replyText = "Автоответчик: Система ИИ не подключена (нужен API ключ в настройках Netlify).";
-                } else {
-                    
-                    // ДОСТАЕМ ИСТОРИЮ ЧАТА (последние 10 сообщений для лучшего контекста)
-                    const historyMsgs = await sql`
-                        SELECT sender, text FROM chat_messages 
-                        WHERE (sender = ${sender} AND receiver = 'support') 
-                           OR (sender = 'support' AND receiver = ${sender})
-                        ORDER BY created_at DESC
-                        LIMIT 10;
-                    `;
-                    
-                    historyMsgs.reverse(); 
-                    
-                    let dialogHistory = "";
-                    historyMsgs.forEach(msg => {
-                        const role = msg.sender === 'support' ? 'ИИ' : 'Пациент';
-                        let cleanText = msg.text.replace(/✅ \*Система:.*?\*/g, '').trim();
-                        dialogHistory += `${role}: ${cleanText}\n`;
-                    });
-
-                    const systemPrompt = `Ты — Qamqor AI, вежливый, эмпатичный и высококвалифицированный ИИ-ассистент в приложении QamqorMed. 
-Твоя задача — проконсультировать пациента и записать его к врачу. Для записи нужно узнать 3 параметра:
-1. Специальность врача (Стоматолог, Невролог, Хирург и т.д.)
-2. Дата приема (например: завтра, 15 апреля)
-3. Время приема (например: 10:00, утром)
-
-Вот история вашей беседы:
-${dialogHistory}
-
-ВНИМАТЕЛЬНО ПРОЧИТАЙ ИСТОРИЮ ВЫШЕ!
-Если пациент УЖЕ называл специальность ранее, ЗАПОМНИ ЕЕ и не спрашивай снова!
-Если он УЖЕ назвал дату, ЗАПОМНИ ЕЕ!
-Спрашивай ТОЛЬКО те данные, которых не хватает.
-Если пациент назвал все 3 параметра (Специальность, Дата, Время) - переспроси: "Вы подтверждаете запись к [Специальность] на [Дата] в [Время]?".
-Если пациент ответил согласием (Да, подтверждаю) - ставь "makeBooking": true.
-Если у пациента экстренные симптомы (острая боль в сердце, удушье), немедленно советуй вызвать скорую помощь по номеру 103.
-
-Твой ответ ВСЕГДА должен быть строгим JSON-объектом:
-{
-  "replyText": "Твой вежливый ответ пациенту от лица Qamqor AI",
-  "makeBooking": false,
-  "bookingData": {
-      "spec": "найденная в истории специальность или пусто",
-      "date": "найденная в истории дата или пусто",
-      "time": "найденное в истории время или пусто"
-  }
-}
-ОТВЕЧАЙ ТОЛЬКО ФОРМАТОМ JSON. Без лишнего текста, без кавычек \`\`\`json.`;
-
-                    try {
-                        const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ parts: [{ text: systemPrompt }] }],
-                                generationConfig: { responseMimeType: "application/json" }
-                            })
-                        });
-                        
-                        const aiData = await aiResponse.json();
-
-                        if (!aiResponse.ok) {
-                            replyText = `Ошибка ИИ: ${aiData.error?.message || 'Неизвестная ошибка'}`;
-                        } else {
-                            // ОЧИСТКА МАРКДАУН-КАВЫЧЕК (Очень частая причина сбоев)
-                            let aiJsonStr = aiData.candidates[0].content.parts[0].text;
-                            aiJsonStr = aiJsonStr.replace(/```json/gi, '').replace(/```/g, '').trim();
-                            
-                            const parsedAI = JSON.parse(aiJsonStr);
-                            replyText = parsedAI.replyText;
-
-                            if (parsedAI.makeBooking === true && parsedAI.bookingData) {
-                                const bData = parsedAI.bookingData;
-                                const doctors = await sql`SELECT iin, name FROM users WHERE role = 'doctor' AND spec ILIKE ${'%' + bData.spec + '%'} LIMIT 1`;
-                                
-                                if (doctors.length > 0) {
-                                    const doctor = doctors[0];
-                                    // ОБНОВЛЕННЫЙ INSERT С УЧЕТОМ НОВЫХ КОЛОНОК БАЗЫ ДАННЫХ
-                                    await sql`
-                                        INSERT INTO appointments (patient_iin, doctor_iin, date, time, type, message, status) 
-                                        VALUES (${sender}, ${doctor.iin}, ${bData.date}, ${bData.time}, 'clinic', 'Запись через ИИ-чат', 'upcoming')
-                                    `;
-                                    replyText += `\n\n✅ *Система: Вы успешно записаны к врачу ${doctor.name} на ${bData.date} в ${bData.time}.*`;
-                                } else {
-                                    replyText += `\n\n❌ *Система: К сожалению, врача специальности "${bData.spec}" сейчас нет в нашей базе.*`;
-                                }
-                            }
-                        }
-                    } catch (err) {
-                        console.error("Ошибка обработки ИИ:", err);
-                        replyText = "Извините, произошел технический сбой (ИИ вернул неверный формат). Пожалуйста, повторите ответ.";
-                    }
-                }
-
-                await sql`INSERT INTO chat_messages (sender, receiver, text) VALUES ('support', ${sender}, ${replyText})`;
-            }
-
-            return new Response(JSON.stringify({ message: "Отправлено", reply: replyText }), { status: 200 });
+export default endpoint('POST', async ({ sql, request, data }) => {
+    const user = await authenticate(sql, request);
+    const sender = user.iin;
+    if (data.sender !== sender) fail(403, 'Недостаточно прав');
+    let receiver = text(data.receiver, 'receiver', 50);
+    let doctorPublicId;
+    if (receiver !== 'support') {
+        if (user.role === 'doctor') await requirePatientAccess(sql, user, receiver);
+        else {
+            requireRole(user, 'patient');
+            // Clients use catalogue UUIDs; persisted conversations retain their legacy IIN keys.
+            const [doctor] = await sql`SELECT iin, public_id::text AS public_id FROM users
+                WHERE role = 'doctor' AND (public_id::text = ${receiver} OR iin = ${receiver})`;
+            if (!doctor) fail(403, 'Нет доступа к этому чату');
+            receiver = doctor.iin;
+            doctorPublicId = doctor.public_id;
+            const relation = await sql`SELECT id FROM appointments WHERE patient_iin = ${sender} AND doctor_iin = ${receiver} AND status IN ('upcoming', 'completed') LIMIT 1`;
+            if (!relation.length) fail(403, 'Нет доступа к этому чату');
         }
-
-        // 2. ЗАГРУЗКА ИСТОРИИ
-        if (action === 'get') {
-            const msgs = await sql`
-                SELECT * FROM chat_messages 
-                WHERE (sender = ${sender} AND receiver = ${receiver}) 
-                   OR (sender = ${receiver} AND receiver = ${sender})
-                ORDER BY created_at ASC;
-            `;
-            return new Response(JSON.stringify({ messages: msgs }), { status: 200 });
-        }
-
-        return new Response(JSON.stringify({ error: "Неизвестное действие" }), { status: 400 });
-
-    } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
-}
+    if (data.action === 'get') {
+        const messages = await sql`SELECT * FROM chat_messages WHERE (sender = ${sender} AND receiver = ${receiver})
+            OR (sender = ${receiver} AND receiver = ${sender}) ORDER BY created_at DESC, id DESC LIMIT 500`;
+        return json({ messages: messages.reverse().map(message => doctorPublicId ? {
+            ...message,
+            sender: message.sender === receiver ? doctorPublicId : message.sender,
+            receiver: message.receiver === receiver ? doctorPublicId : message.receiver,
+        } : message) });
+    }
+    if (data.action !== 'send') fail(400, 'Неизвестное действие');
+    const message = text(data.text, 'text', 8000);
+    await throttle(sql, 'chat:' + user.id, 30);
+    let reply = '';
+    if (receiver === 'support') {
+        if (!process.env.GEMINI_API_KEY) fail(503, 'ИИ временно недоступен');
+        const history = await sql`SELECT sender, text FROM chat_messages WHERE (sender = ${sender} AND receiver = 'support')
+            OR (sender = 'support' AND receiver = ${sender}) ORDER BY created_at DESC, id DESC LIMIT 10`;
+        const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent', {
+            method: 'POST', signal: AbortSignal.timeout(20000),
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+            body: JSON.stringify({
+                systemInstruction: { parts: [{ text: 'Ты Asem-Ai, помощник QamqorMed. Отвечай на языке пользователя: русском или казахском. Не выдавай себя за врача, не назначай лекарства и не меняй назначения. При экстренных симптомах советуй вызвать 103. Не заявляй о выполнении действий в базе: для записи предложи открыть карточку врача. Не раскрывай чужие данные.' }] },
+                contents: [...history.reverse().map(m => ({ role: m.sender === 'support' ? 'model' : 'user', parts: [{ text: m.text }] })),
+                    { role: 'user', parts: [{ text: message }] }],
+            }),
+        });
+        if (!response.ok) fail(503, 'ИИ временно недоступен');
+        const output = await response.json();
+        reply = output.candidates?.[0]?.content?.parts?.map(p => p.text ?? '').join('').trim() ?? '';
+        if (!reply || reply.length > 20000) fail(503, 'ИИ не смог подготовить ответ');
+        await sql`WITH sent AS (INSERT INTO chat_messages(sender, receiver, text) VALUES (${sender}, 'support', ${message}) RETURNING id)
+            INSERT INTO chat_messages(sender, receiver, text) SELECT 'support', ${sender}, ${reply} FROM sent`;
+    } else {
+        await sql`INSERT INTO chat_messages(sender, receiver, text) VALUES (${sender}, ${receiver}, ${message})`;
+    }
+    return json({ message: 'Отправлено', reply });
+});

@@ -1,33 +1,31 @@
-import { neon } from '@netlify/neon';
+import { endpoint, authenticate, email, text, fail, json, passwordMatches, validatePassword, passwordHash, digest, sessionToken, throttle } from '../lib/security.mjs';
 
-export default async function handler(request, context) {
-    if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'Метод не поддерживается' }), { status: 405 });
-
-    try {
-        const data = await request.json();
-        const { action, iin, email, bloodType, newPassword, oldPassword } = data;
-        const sql = neon();
-
-        // Если пришел запрос на смену пароля
-        if (action === 'change_password') {
-            const user = await sql`SELECT * FROM users WHERE iin = ${iin} AND password = ${oldPassword}`;
-            if (user.length === 0) {
-                return new Response(JSON.stringify({ error: 'Неверный старый пароль' }), { status: 401 });
-            }
-            await sql`UPDATE users SET password = ${newPassword} WHERE iin = ${iin}`;
-            return new Response(JSON.stringify({ message: '✅ Пароль успешно изменён!' }), { status: 200 });
-        }
-
-        // Если пришел запрос на обновление профиля (почта и группа крови)
-        if (action === 'update_profile') {
-            await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS blood_type TEXT;`;
-            await sql`UPDATE users SET email = ${email}, blood_type = ${bloodType} WHERE iin = ${iin}`;
-            return new Response(JSON.stringify({ message: 'Данные успешно сохранены!' }), { status: 200 });
-        }
-
-        return new Response(JSON.stringify({ error: 'Неизвестное действие' }), { status: 400 });
-
-    } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+export default endpoint('POST', async ({ data, sql, request }) => {
+    const user = await authenticate(sql, request);
+    if (data.iin && data.iin !== user.iin) fail(403, 'Недостаточно прав');
+    if (data.action === 'update_profile') {
+        const address = email(data.email);
+        const bloodType = text(data.bloodType, 'bloodType', 40);
+        await sql`UPDATE users SET email = ${address}, blood_type = ${bloodType} WHERE id = ${user.id}`;
+        return json({ message: 'Данные сохранены' });
     }
-}
+    if (data.action === 'change_password') {
+        await throttle(sql, 'password:' + user.id);
+        const [stored] = await sql`SELECT password FROM users WHERE id = ${user.id}`;
+        if (!stored || !await passwordMatches(data.oldPassword, stored.password)) fail(400, 'Неверный старый пароль');
+        const hash = await passwordHash(validatePassword(data.newPassword));
+        const changed = await sql`WITH updated AS (
+            UPDATE users SET password = ${hash}, session_version = session_version + 1
+            WHERE id = ${user.id} AND password = ${stored.password} AND session_version = ${user.session_version}
+            RETURNING id, session_version
+        ), revoked AS (
+            DELETE FROM auth_sessions WHERE user_id IN (SELECT id FROM updated) AND token_hash <> ${digest(sessionToken(request))}
+        ), retained AS (
+            UPDATE auth_sessions s SET session_version = u.session_version FROM updated u
+            WHERE s.user_id = u.id AND s.token_hash = ${digest(sessionToken(request))}
+        ) SELECT id FROM updated`;
+        if (!changed.length) fail(409, 'Пароль уже изменён, повторите вход');
+        return json({ message: 'Пароль изменён' });
+    }
+    fail(400, 'Неизвестное действие');
+});

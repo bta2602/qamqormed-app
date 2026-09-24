@@ -1,72 +1,52 @@
-import { neon } from '@netlify/neon';
+import { endpoint, authenticate, requireRole, text, email, iin, validatePassword, passwordHash, fail, json } from '../lib/security.mjs';
 
-export default async function handler(request, context) {
-    if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405 });
-
-    const sql = neon();
-
-    try {
-        const data = await request.json();
-        const { action, adminEmail, iin, email, name, password, role, bloodType, targetIin, spec, city, exp, bio, img, rating } = data;
-
-        // ПРОВЕРКА ПРАВ
-        const adminCheck = await sql`SELECT role FROM users WHERE email = ${adminEmail}`;
-        if (adminCheck.length === 0 || adminCheck[0].role !== 'admin') {
-            return new Response(JSON.stringify({ error: "Отказано в доступе. Вы не администратор." }), { status: 403 });
-        }
-
-        // Подготавливаем колонки для врачей (на случай если их еще нет)
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS spec VARCHAR(100) DEFAULT 'Терапевт'`;
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT 'Астана'`;
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS exp VARCHAR(50) DEFAULT '5 лет'`;
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT 'Квалифицированный специалист.'`;
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS img TEXT`;
-        await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS rating NUMERIC(3,1) DEFAULT 5.0`;
-
-        // 1. ПОЛУЧИТЬ ВСЕХ И СТАТИСТИКУ
-        if (action === 'get_all') {
-            const users = await sql`SELECT name, email, iin, role, blood_type, spec, city, exp, bio, img, rating FROM users ORDER BY role ASC, name ASC`;
-            const appts = await sql`SELECT COUNT(*) as total FROM appointments`;
-            
-            return new Response(JSON.stringify({ 
-                users: users, 
-                totalAppointments: appts[0].total 
-            }), { status: 200 });
-        }
-
-        // 2. СОЗДАТЬ
-        if (action === 'create') {
-            const check = await sql`SELECT iin FROM users WHERE email = ${email} OR iin = ${iin}`;
-            if (check.length > 0) return new Response(JSON.stringify({ error: "Email или ИИН уже занят" }), { status: 400 });
-
-            await sql`
-                INSERT INTO users (name, email, password, iin, role, blood_type, spec, city, exp, bio, img, rating) 
-                VALUES (${name}, ${email}, ${password}, ${iin}, ${role}, ${bloodType || 'Неизвестно'}, ${spec || ''}, ${city || ''}, ${exp || ''}, ${bio || ''}, ${img || ''}, ${rating || 5.0})
-            `;
-            return new Response(JSON.stringify({ message: "Учетная запись создана" }), { status: 200 });
-        }
-
-        // 3. ОБНОВИТЬ
-        if (action === 'update') {
-            await sql`
-                UPDATE users 
-                SET name = ${name}, email = ${email}, role = ${role}, blood_type = ${bloodType},
-                    spec = ${spec || ''}, city = ${city || ''}, exp = ${exp || ''}, bio = ${bio || ''}, img = ${img || ''}, rating = ${rating || 5.0}
-                WHERE iin = ${targetIin}
-            `;
-            return new Response(JSON.stringify({ message: "Данные успешно обновлены" }), { status: 200 });
-        }
-
-        // 4. УДАЛИТЬ
-        if (action === 'delete') {
-            await sql`DELETE FROM users WHERE iin = ${targetIin}`;
-            await sql`DELETE FROM appointments WHERE patient_iin = ${targetIin}`;
-            return new Response(JSON.stringify({ message: "Пользователь удален" }), { status: 200 });
-        }
-
-        return new Response(JSON.stringify({ error: "Неизвестное действие" }), { status: 400 });
-
-    } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+export default endpoint('POST', async ({ sql, request, data }) => {
+    const admin = await authenticate(sql, request);
+    requireRole(admin, 'admin');
+    if (data.action === 'get_all') {
+        const users = await sql`SELECT name, email, iin, role, blood_type, spec, city, exp, bio, img, rating FROM users ORDER BY role, name`;
+        const [count] = await sql`SELECT count(*) AS total FROM appointments`;
+        return json({ users, totalAppointments: count.total });
     }
-}
+    if (data.action === 'delete') {
+        const target = iin(data.targetIin);
+        if (target === admin.iin) fail(400, 'Нельзя удалить собственный аккаунт');
+        // Legacy clinical tables reference IIN/email without foreign keys. Keep their identity attached.
+        const rows = await sql`DELETE FROM users u WHERE u.iin = ${target}
+            AND NOT EXISTS (SELECT 1 FROM appointments a WHERE a.patient_iin = u.iin OR a.doctor_iin = u.iin)
+            AND NOT EXISTS (SELECT 1 FROM analyses a WHERE a.patient_iin = u.iin OR a.doctor_email = u.email)
+            AND NOT EXISTS (SELECT 1 FROM chat_messages m WHERE m.sender = u.iin OR m.receiver = u.iin)
+            RETURNING id`;
+        if (!rows.length) fail(409, 'Аккаунт недоступен или связан с медицинскими данными');
+        return json({ message: 'Аккаунт удалён' });
+    }
+    const name = text(data.name, 'name', 100);
+    const address = email(data.email);
+    const role = data.role;
+    if (!['admin', 'doctor', 'patient'].includes(role)) fail(400, 'Некорректная роль');
+    const optional = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
+    const spec = optional(data.spec, 100), city = optional(data.city, 100), exp = optional(data.exp, 50);
+    const bio = optional(data.bio, 5000), blood = optional(data.bloodType, 40), img = optional(data.img, 2048);
+    if (img && !img.startsWith('https://')) fail(400, 'Фото должно использовать HTTPS');
+    const rating = Number(data.rating ?? 0);
+    if (!Number.isFinite(rating) || rating < 0 || rating > 5) fail(400, 'Некорректный рейтинг');
+    if (data.action === 'create') {
+        const identifier = iin(data.iin);
+        const hash = await passwordHash(validatePassword(data.password));
+        await sql`INSERT INTO users(name, email, password, iin, role, blood_type, spec, city, exp, bio, img, rating)
+            VALUES (${name}, ${address}, ${hash}, ${identifier}, ${role}, ${blood}, ${spec}, ${city}, ${exp}, ${bio}, ${img}, ${rating})`;
+        return json({ message: 'Аккаунт создан' });
+    }
+    if (data.action === 'update') {
+        const target = iin(data.targetIin);
+        if (target === admin.iin && role !== 'admin') fail(400, 'Нельзя снять собственные права');
+        await sql`WITH updated AS (
+            UPDATE users SET name = ${name}, email = ${address}, role = ${role}, blood_type = ${blood},
+            spec = ${spec}, city = ${city}, exp = ${exp}, bio = ${bio}, img = ${img}, rating = ${rating},
+            session_version = session_version + CASE WHEN id = ${admin.id} THEN 0 ELSE 1 END
+            WHERE iin = ${target} RETURNING id
+        ) DELETE FROM auth_sessions WHERE user_id IN (SELECT id FROM updated) AND user_id <> ${admin.id}`;
+        return json({ message: 'Данные сохранены' });
+    }
+    fail(400, 'Неизвестное действие');
+});

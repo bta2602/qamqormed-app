@@ -1,39 +1,12 @@
-import { neon } from '@netlify/neon';
+import { endpoint, text, email, iin, validatePassword, passwordHash, createSession, throttle } from '../lib/security.mjs';
 
-export default async function handler(request, context) {
-    // Проверяем, что нам прислали данные (метод POST)
-    if (request.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Метод не поддерживается' }), { status: 405 });
-    }
-
-    try {
-        // Читаем данные, которые отправил телефон/сайт (Имя, Почту, Пароль, ИИН)
-        const data = await request.json();
-        const { name, email, password, iin, role } = data;
-
-        const sql = neon();
-
-        // Записываем нового пользователя в таблицу users
-        const result = await sql`
-            INSERT INTO users (name, email, password, iin, role)
-            VALUES (${name}, ${email}, ${password}, ${iin}, ${role || 'patient'})
-            RETURNING id, name, email, role;
-        `;
-
-        // Отвечаем сайту, что всё прошло успешно
-        return new Response(JSON.stringify({ 
-            message: "✅ Регистрация успешна!", 
-            user: result[0] 
-        }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json; charset=utf-8' }
-        });
-
-    } catch (error) {
-        // Если такой ИИН или почта уже есть в базе, выдаст ошибку
-        return new Response(JSON.stringify({ error: "Ошибка регистрации. Возможно, такой пользователь уже существует." }), { 
-            status: 500,
-            headers: { 'Content-Type': 'application/json; charset=utf-8' }
-        });
-    }
-}
+export default endpoint('POST', async ({ data, sql, context }) => {
+    await throttle(sql, 'register:' + (context.ip ?? 'unknown'), 10);
+    const name = text(data.name, 'name', 100);
+    const address = email(data.email);
+    const identifier = iin(data.iin);
+    const hash = await passwordHash(validatePassword(data.password));
+    const users = await sql`INSERT INTO users(name, email, password, iin, role)
+        VALUES (${name}, ${address}, ${hash}, ${identifier}, 'patient') RETURNING id, name, email, iin, role, blood_type, session_version`;
+    return createSession(sql, users[0]);
+});

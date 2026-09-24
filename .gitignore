@@ -1,0 +1,13 @@
+node_modules/
+public/
+# Local Netlify folder
+.netlify
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+backups/
