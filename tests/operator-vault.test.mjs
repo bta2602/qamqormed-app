@@ -227,8 +227,9 @@ test(`${executable} full dry bootstrap: existing directory, mocked secure prompt
     const dummyBase64 = Buffer.from(Array.from({ length: 32 }, (_, i) => i)).toString('base64');
     assert.equal(recovered.version, 1);
     assert.ok(Number.isFinite(Date.parse(recovered.createdAt)));
-    assert.equal(recovered.env.QAMQOR_DATA_KEY_ID, 'data-20261109');
-    assert.deepEqual(JSON.parse(recovered.env.QAMQOR_DATA_KEYS), { 'data-20261109': dummyBase64 });
+    const keyId = recovered.env.QAMQOR_DATA_KEY_ID;
+    assert.match(keyId, /^data-[0-9]{8}$/);
+    assert.deepEqual(JSON.parse(recovered.env.QAMQOR_DATA_KEYS), { [keyId]: dummyBase64 });
     assert.doesNotMatch(saved + result.stdout, new RegExp(dummyBase64));
     const verify = spawnSync(executable, ['-NoProfile', '-NonInteractive', '-Command', `
         $ErrorActionPreference = 'Stop'
@@ -248,8 +249,8 @@ test(`${executable} full dry bootstrap: existing directory, mocked secure prompt
         $plain = [Security.Cryptography.ProtectedData]::Unprotect($bytes, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)
         $value = ConvertFrom-Json ([Text.Encoding]::UTF8.GetString($plain))
         if ($value.version -ne 1 -or ([DateTimeOffset]$value.createdAt).UtcDateTime.Ticks -ne ([DateTimeOffset]${psLiteral(recovered.createdAt)}).UtcDateTime.Ticks -or
-            $value.env.QAMQOR_DATA_KEY_ID -ne 'data-20261109' -or
-            ($value.env.QAMQOR_DATA_KEYS | ConvertFrom-Json).'data-20261109' -ne [Convert]::ToBase64String([byte[]](0..31))) { throw 'Fixture mismatch.' }
+            $value.env.QAMQOR_DATA_KEY_ID -ne ${psLiteral(keyId)} -or
+            ($value.env.QAMQOR_DATA_KEYS | ConvertFrom-Json).${psLiteral(keyId)} -ne [Convert]::ToBase64String([byte[]](0..31))) { throw 'Fixture mismatch.' }
         [Array]::Clear($plain, 0, $plain.Length)
         $bytes[0] = $bytes[0] -bxor 1
         $failed = $false

@@ -175,12 +175,13 @@ try {
     $keyBytes = New-Object byte[] 32
     $random = [Security.Cryptography.RandomNumberGenerator]::Create()
     $random.GetBytes($keyBytes)
-    $keyMap = [ordered]@{ 'data-20261109' = [Convert]::ToBase64String($keyBytes) }
+    $keyId = 'data-' + [DateTime]::UtcNow.ToString('yyyyMMdd', [Globalization.CultureInfo]::InvariantCulture)
+    $keyMap = [ordered]@{ $keyId = [Convert]::ToBase64String($keyBytes) }
     $payload = [ordered]@{
         version = 1
         createdAt = [DateTime]::UtcNow.ToString('o', [Globalization.CultureInfo]::InvariantCulture)
         env = [ordered]@{
-            QAMQOR_DATA_KEY_ID = 'data-20261109'
+            QAMQOR_DATA_KEY_ID = $keyId
             QAMQOR_DATA_KEYS = (ConvertTo-Json -InputObject $keyMap -Compress)
         }
     }
