@@ -373,6 +373,16 @@ try {
     else {
         const {sql,url}=await databaseFor('production',secret);
         process.exitCode=await runSchemaCheck({env:{...env,NETLIFY_DATABASE_URL:url},connect:()=>sql});
+        if (process.exitCode===0) {
+            phase='production_encrypted_read_check';
+            await runEncryption(sql,{env,apply:false,output:message=>{
+                assert.match(message,/would_encrypt=0$/);
+                report({phase,message});
+            }});
+            const {verifyRuntimeRole}=await import('./lib/runtime-role.mjs');
+            await verifyRuntimeRole(sql);
+            report({check:'current_database',status:'passed',encryptedValuesAuthenticated:true,runtimePrivileges:true});
+        }
     }
 } catch {
     report({check:'operator_rollout',status:'failed',phase,reason:'Operation stopped; details redacted. Preserve all backup and credential files.'});

@@ -43,6 +43,14 @@ export async function verifyLive(credentials, output = console.log) {
         const context=await browser.newContext({viewport:{width:390,height:844}});
         const page=await context.newPage();
         emit({check:'live_browser',phase:'login'});
+        async function screenshot(name) {
+            await page.waitForFunction(()=>!document.querySelector('.loading'));
+            await page.evaluate(()=>document.fonts.ready);
+            await page.waitForFunction(()=>Array.from(document.querySelectorAll('img.icon')).every(img=>img.complete && img.naturalWidth>0));
+            assert.equal(await page.locator('.error-panel').count(),0);
+            await page.evaluate(()=>scrollTo(0,0));
+            await page.screenshot({path:join(folder,name),fullPage:true});
+        }
         let errors=0;
         page.on('pageerror',()=>errors++);
         await page.goto(base,{waitUntil:'domcontentloaded'});
@@ -52,7 +60,7 @@ export async function verifyLive(credentials, output = console.log) {
         await page.locator('form button[type=submit]').click();
         await page.locator('.services').waitFor();
         assert.equal(await page.locator('.services a').count(),8);
-        await page.screenshot({path:join(folder,'live-home-mobile.png'),fullPage:true});
+        await screenshot('live-home-mobile.png');
         await page.locator('.bottomnav a[href="#chat"]').click();
         emit({check:'live_browser',phase:'gemini'});
         await page.locator('input[name=aiConsent]').check();
@@ -65,7 +73,7 @@ export async function verifyLive(credentials, output = console.log) {
         assert.ok(typeof answer.reply==='string' && answer.reply.trim().length>0);
         await page.waitForFunction(()=>document.querySelector('textarea[name=text]')?.value==='');
         await page.locator('.messages .message.received').last().waitFor();
-        await page.screenshot({path:join(folder,'live-gemini-mobile.png'),fullPage:true});
+        await screenshot('live-gemini-mobile.png');
         emit({check:'gemini_website',status:'passed',syntheticMessage:true,replyReceived:true});
         await page.goBack();
         await page.locator('.services').waitFor();
@@ -74,10 +82,10 @@ export async function verifyLive(credentials, output = console.log) {
         assert.equal(await page.locator('html').getAttribute('lang'),'kk');
         assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-        await page.screenshot({path:join(folder,'live-home-kk-dark.png'),fullPage:true});
+        await screenshot('live-home-kk-dark.png');
         await page.setViewportSize({width:1280,height:900});
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-        await page.screenshot({path:join(folder,'live-home-desktop.png'),fullPage:true});
+        await screenshot('live-home-desktop.png');
         assert.equal(errors,0);
         emit({check:'live_browser',status:'passed',viewports:['390x844','1280x900'],languages:['ru','kk'],darkTheme:true,back:true,pageErrors:errors});
     } finally {await browser.close();}
