@@ -7,12 +7,13 @@ export default endpoint('POST', async ({ data, sql, context }) => {
     await throttle(sql, 'login:email:' + address);
     const users = await sql`SELECT * FROM users WHERE lower(email) = ${address}`;
     const user = users[0];
-    if (!user) { await passwordHash(data.password); fail(401, 'Неверная почта или пароль'); }
+    if (!user || !user.is_active) { await passwordHash(data.password); fail(401, 'Неверная почта или пароль'); }
     if (!await passwordMatches(data.password, user.password)) fail(401, 'Неверная почта или пароль');
     if (!user.password.startsWith('scrypt$')) {
         const upgraded = await passwordHash(data.password);
-        const changed = await sql`UPDATE users SET password = ${upgraded} WHERE id = ${user.id} AND password = ${user.password} RETURNING id`;
+        const changed = await sql`UPDATE users SET password = ${upgraded} WHERE id = ${user.id} AND password = ${user.password} RETURNING id, session_version`;
         if (!changed.length) fail(401, 'Повторите вход');
+        user.session_version = changed[0].session_version;
     }
     return createSession(sql, user);
 });

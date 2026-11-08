@@ -1,10 +1,14 @@
 import { randomBytes, createHash, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
 import { neon } from '@netlify/neon';
+import { revealField } from './data-crypto.mjs';
 
 const scrypt = promisify(scryptCallback);
 export class HttpError extends Error {
-    constructor(status, message) { super(message); this.status = status; }
+    constructor(status, message, retryAfterSeconds = 900) {
+        super(message); this.status = status;
+        this.retryAfterSeconds = Number.isFinite(retryAfterSeconds) ? Math.max(1, Math.min(86400, Math.ceil(retryAfterSeconds))) : 900;
+    }
 }
 export const fail = (status, message) => { throw new HttpError(status, message); };
 export const digest = value => createHash('sha256').update(value).digest('hex');
@@ -20,25 +24,44 @@ export function endpoint(method, operation, { database = true } = {}) {
         try {
             const origin = request.headers.get('Origin');
             if (origin && origin !== new URL(request.url).origin) fail(403, 'Недопустимый источник запроса');
+            if (request.headers.get('Sec-Fetch-Site') === 'cross-site') fail(403, 'Недопустимый источник запроса');
             let data = {};
             if (method !== 'GET') {
-                if (!request.headers.get('Content-Type')?.startsWith('application/json')) fail(415, 'Требуется JSON');
-                const raw = await request.text();
-                if (Buffer.byteLength(raw) > 65536) fail(413, 'Запрос слишком большой');
+                if (request.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase() !== 'application/json') fail(415, 'Требуется JSON');
+                const raw = await boundedBody(request);
                 try { data = JSON.parse(raw); } catch { fail(400, 'Некорректный JSON'); }
                 if (!data || Array.isArray(data) || typeof data !== 'object') fail(400, 'Некорректный запрос');
             }
             const sql = database ? (context.testSql ?? neon()) : undefined;
             return await operation({ request, context, sql, data });
         } catch (error) {
-            if (error instanceof HttpError) return json({ error: error.message }, error.status);
+            if (error instanceof HttpError) return json({ error: error.message }, error.status,
+                error.status === 429 ? { 'Retry-After': String(error.retryAfterSeconds) } : {});
             if (error.code === '23505') return json({ error: 'Запись уже существует или время уже занято' }, 409);
             if (error.code === '23503') return json({ error: 'Запись связана с другими данными' }, 409);
+            if (['23514', '40P01', '40001'].includes(error.code)) return json({ error: 'Данные уже изменились. Обновите страницу и повторите действие' }, 409);
             // Do not disclose SQL, credentials, patient identifiers or database internals.
             console.error('API request failed', error.code ?? error.name);
             return json({ error: 'Сервис временно недоступен' }, 503);
         }
     };
+}
+async function boundedBody(request) {
+    if (Number(request.headers.get('Content-Length')) > 65536) fail(413, 'Запрос слишком большой');
+    const reader = request.body?.getReader();
+    if (!reader) return '';
+    const chunks = [];
+    let size = 0;
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            size += value.byteLength;
+            if (size > 65536) { await reader.cancel(); fail(413, 'Запрос слишком большой'); }
+            chunks.push(value);
+        }
+    } finally { reader.releaseLock(); }
+    return Buffer.concat(chunks).toString('utf8');
 }
 export function text(value, field, max = 160) {
     if (typeof value !== 'string' || !value.trim() || value.length > max) fail(400, 'Некорректное поле: ' + field);
@@ -76,7 +99,7 @@ export async function passwordMatches(password, stored) {
 }
 export function publicUser(user) {
     const { id, name, email, iin, role, spec, img, city, exp, bio, rating, blood_type } = user;
-    return { id, name, email, iin, role, spec, img, city, exp, bio, rating, blood_type };
+    return { id, name, email, iin, role, spec, img, city, exp, bio, rating, blood_type: revealField(blood_type, 'users', id, 'blood_type') };
 }
 export function sessionToken(request) {
     const authorization = request.headers.get('Authorization');
@@ -88,7 +111,7 @@ export async function authenticate(sql, request) {
     if (!/^[A-Za-z0-9_-]{43}$/.test(token)) fail(401, 'Войдите в аккаунт заново');
     const rows = await sql`SELECT u.id, u.name, u.email, u.iin, u.role, u.spec, u.img, u.city, u.exp, u.bio, u.rating, u.blood_type, u.session_version
         FROM auth_sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ${digest(token)} AND s.expires_at > now()
-        AND s.session_version = u.session_version`;
+        AND s.session_version = u.session_version AND u.is_active = true AND u.role IN ('patient', 'doctor', 'admin')`;
     if (!rows.length) fail(401, 'Сессия истекла');
     return rows[0];
 }
@@ -96,11 +119,12 @@ export async function createSession(sql, user) {
     const token = randomBytes(32).toString('base64url');
     // Bind issuance to the credentials verified by login, even if they change while login is in flight.
     const rows = await sql`INSERT INTO auth_sessions(token_hash, user_id, session_version, expires_at)
-        SELECT ${digest(token)}, id, session_version, now() + interval '30 days' FROM users
-        WHERE id = ${user.id} AND session_version = ${user.session_version} RETURNING user_id`;
+        SELECT ${digest(token)}, id, session_version,
+            now() + CASE WHEN role = 'patient' THEN interval '30 days' ELSE interval '8 hours' END FROM users
+        WHERE id = ${user.id} AND session_version = ${user.session_version} AND is_active = true RETURNING user_id`;
     if (!rows.length) fail(401, 'Повторите вход');
     return json({ user: publicUser(user), token }, 200, {
-        'Set-Cookie': '__Host-qamqor=' + token + '; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000',
+        'Set-Cookie': '__Host-qamqor=' + token + '; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=' + (user.role === 'patient' ? 2592000 : 28800),
     });
 }
 export async function throttle(sql, bucket, limit = 10) {
@@ -112,6 +136,17 @@ export async function throttle(sql, bucket, limit = 10) {
 }
 export function requireRole(user, ...roles) {
     if (!roles.includes(user.role)) fail(403, 'Недостаточно прав');
+}
+export async function confirmPassword(sql, user, password) {
+    await throttle(sql, 'confirm:' + user.id, 10);
+    const [stored] = await sql`SELECT password FROM users WHERE id = ${user.id} AND is_active = true AND session_version = ${user.session_version}`;
+    if (!stored || !await passwordMatches(password, stored.password)) fail(403, 'Подтвердите действие текущим паролем');
+}
+export function pagination(data, max = 100) {
+    const page = data.page ?? 1, pageSize = data.pageSize ?? 30;
+    if (!Number.isSafeInteger(page) || page < 1 || page > 10000 ||
+        !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > max) fail(400, 'Некорректная страница');
+    return { page, pageSize, offset: (page - 1) * pageSize };
 }
 export async function requirePatientAccess(sql, user, patientIin) {
     iin(patientIin);
@@ -125,8 +160,10 @@ export async function requirePatientAccess(sql, user, patientIin) {
 export function validateAnalysis(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) fail(400, 'Некорректный анализ');
     text(value.type, 'type', 100);
-    text(value.date, 'date', 20);
-    if (!Array.isArray(value.results) || value.results.length > 50 ||
+    const date = text(value.date, 'date', 20);
+    const parsed = new Date(date + 'T00:00:00Z');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(+parsed) || parsed.toISOString().slice(0, 10) !== date) fail(400, 'Некорректная дата анализа');
+    if (!Array.isArray(value.results) || value.results.length < 1 || value.results.length > 50 ||
         !value.results.every(r => r && typeof r === 'object' && typeof r.name === 'string' && r.name.trim() && r.name.length <= 100 &&
             ['value', 'min', 'max'].every(k => Number.isFinite(r[k])) && r.min <= r.max))
         fail(400, 'Некорректные результаты');

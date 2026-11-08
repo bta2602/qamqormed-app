@@ -1,12 +1,19 @@
-import { endpoint, authenticate, email, text, fail, json, passwordMatches, validatePassword, passwordHash, digest, sessionToken, throttle } from '../lib/security.mjs';
+import { endpoint, authenticate, confirmPassword, email, text, fail, json, passwordMatches, validatePassword, passwordHash, digest, sessionToken, throttle } from '../lib/security.mjs';
+import { protectField } from '../lib/data-crypto.mjs';
 
 export default endpoint('POST', async ({ data, sql, request }) => {
     const user = await authenticate(sql, request);
     if (data.iin && data.iin !== user.iin) fail(403, 'Недостаточно прав');
     if (data.action === 'update_profile') {
         const address = email(data.email);
-        const bloodType = text(data.bloodType, 'bloodType', 40);
-        await sql`UPDATE users SET email = ${address}, blood_type = ${bloodType} WHERE id = ${user.id}`;
+        const bloodType = protectField(text(data.bloodType, 'bloodType', 40), 'users', user.id, 'blood_type');
+        if (address !== user.email.toLowerCase()) await confirmPassword(sql, user, data.currentPassword);
+        const changed = await sql`WITH updated AS (
+            UPDATE users SET email = ${address}, blood_type = ${bloodType}
+                WHERE id = ${user.id} AND session_version = ${user.session_version} AND is_active = true RETURNING id
+        ), audited AS (INSERT INTO security_audit(actor_id, action, resource_type, resource_id)
+            SELECT ${user.id}, 'profile_updated', 'user', id FROM updated) SELECT id FROM updated`;
+        if (!changed.length) fail(409, 'Профиль уже изменён, повторите вход');
         return json({ message: 'Данные сохранены' });
     }
     if (data.action === 'change_password') {
@@ -23,6 +30,9 @@ export default endpoint('POST', async ({ data, sql, request }) => {
         ), retained AS (
             UPDATE auth_sessions s SET session_version = u.session_version FROM updated u
             WHERE s.user_id = u.id AND s.token_hash = ${digest(sessionToken(request))}
+        ), audited AS (
+            INSERT INTO security_audit(actor_id, action, resource_type, resource_id)
+                SELECT ${user.id}, 'password_changed', 'user', id FROM updated
         ) SELECT id FROM updated`;
         if (!changed.length) fail(409, 'Пароль уже изменён, повторите вход');
         return json({ message: 'Пароль изменён' });

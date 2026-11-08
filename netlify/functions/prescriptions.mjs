@@ -1,7 +1,9 @@
 import { endpoint, authenticate, requireRole, requirePatientAccess, text, fail, json } from '../lib/security.mjs';
+import { protectRecord, revealRecord, reserveId } from '../lib/data-crypto.mjs';
 
 export default endpoint('POST', async ({ sql, request, data }) => {
     const user = await authenticate(sql, request);
+    requireRole(user, 'patient', 'doctor');
     if (data.action === 'get') {
         const prescriptions = await sql`SELECT p.*, d.name AS doctor_name, u.name AS patient_name,
             u.iin AS patient_iin, s.start_at, s.timezone,
@@ -10,7 +12,7 @@ export default endpoint('POST', async ({ sql, request, data }) => {
             LEFT JOIN prescription_schedules s ON s.prescription_id = p.id
             WHERE p.patient_id = ${user.id} OR (p.doctor_id = ${user.id} AND ${user.role} = 'doctor')
             ORDER BY p.created_at DESC`;
-        return json({ prescriptions });
+        return json({ prescriptions: prescriptions.map(row => revealRecord('prescriptions', row)) });
     }
     if (data.action === 'create') {
         requireRole(user, 'doctor');
@@ -21,9 +23,12 @@ export default endpoint('POST', async ({ sql, request, data }) => {
         if (instructions.length > 2000) fail(400, 'Инструкция слишком длинная');
         if (![4, 6, 8, 12, 24].includes(data.intervalHours)) fail(400, 'Некорректный интервал');
         if (!Number.isInteger(data.durationDays) || data.durationDays < 1 || data.durationDays > 365) fail(400, 'Некорректная длительность');
-        const rows = await sql`INSERT INTO prescriptions(doctor_id, patient_id, medicine, dosage, instructions, interval_hours, duration_days)
-            SELECT ${user.id}, id, ${medicine}, ${dosage}, ${instructions}, ${data.intervalHours}, ${data.durationDays}
-            FROM users WHERE iin = ${data.patientIin} AND role = 'patient' RETURNING id`;
+        const secured = protectRecord('prescriptions', { id: await reserveId(sql, 'prescriptions'), medicine, dosage, instructions });
+        const rows = await sql`WITH created AS (INSERT INTO prescriptions(id, doctor_id, patient_id, medicine, dosage, instructions, interval_hours, duration_days)
+            SELECT ${secured.id}, ${user.id}, id, ${secured.medicine}, ${secured.dosage}, ${secured.instructions}, ${data.intervalHours}, ${data.durationDays}
+            FROM users WHERE iin = ${data.patientIin} AND role = 'patient' AND is_active = true RETURNING id),
+            audited AS (INSERT INTO security_audit(actor_id, action, resource_type, resource_id)
+                SELECT ${user.id}, 'prescription_created', 'prescription', id FROM created) SELECT id FROM created`;
         if (!rows.length) fail(404, 'Пациент не найден');
         return json({ id: Number(rows[0].id), message: 'Назначение сохранено' });
     }
@@ -34,9 +39,9 @@ export default endpoint('POST', async ({ sql, request, data }) => {
         const rows = await sql`WITH revoked AS (
             UPDATE prescriptions SET status = 'revoked', revoked_at = now()
             WHERE id = ${id} AND doctor_id = ${user.id} AND status = 'active' RETURNING id
-        ), disabled AS (
-            UPDATE prescription_schedules SET reminders_enabled = false, updated_at = now()
-            WHERE prescription_id IN (SELECT id FROM revoked)
+        ), audited AS (
+            INSERT INTO security_audit(actor_id, action, resource_type, resource_id)
+                SELECT ${user.id}, 'prescription_revoked', 'prescription', id FROM revoked
         ) SELECT id FROM revoked`;
         if (!rows.length) fail(404, 'Назначение недоступно');
         return json({ message: 'Назначение отменено' });
@@ -50,12 +55,14 @@ export default endpoint('POST', async ({ sql, request, data }) => {
         if (!Number.isFinite(+start) || start.toISOString() !== canonical ||
             Math.abs(+start - Date.now()) > 366 * 86400000 || typeof data.enabled !== 'boolean') fail(400, 'Некорректное расписание');
         try { new Intl.DateTimeFormat('ru', { timeZone: zone }); } catch { fail(400, 'Некорректный часовой пояс'); }
-        const rows = await sql`INSERT INTO prescription_schedules(prescription_id, start_at, timezone, reminders_enabled)
-            SELECT id, ${start.toISOString()}, ${zone}, ${data.enabled} FROM prescriptions
-            WHERE id = ${id} AND patient_id = ${user.id} AND status = 'active'
+        const rows = await sql`WITH owned AS (
+            SELECT id FROM prescriptions WHERE id = ${id} AND patient_id = ${user.id} AND status = 'active' FOR UPDATE
+        ), scheduled AS (INSERT INTO prescription_schedules(prescription_id, start_at, timezone, reminders_enabled)
+            SELECT id, ${start.toISOString()}, ${zone}, ${data.enabled} FROM owned
             ON CONFLICT(prescription_id) DO UPDATE SET start_at = EXCLUDED.start_at, timezone = EXCLUDED.timezone,
                 reminders_enabled = EXCLUDED.reminders_enabled, updated_at = now()
-            RETURNING prescription_id`;
+            RETURNING prescription_id), audited AS (INSERT INTO security_audit(actor_id, action, resource_type, resource_id)
+                SELECT ${user.id}, 'prescription_scheduled', 'prescription', prescription_id FROM scheduled) SELECT prescription_id FROM scheduled`;
         if (!rows.length) fail(404, 'Назначение недоступно');
         return json({ message: 'Расписание сохранено' });
     }

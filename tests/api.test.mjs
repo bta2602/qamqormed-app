@@ -1,4 +1,5 @@
 import test, { before, after } from 'node:test';
+import './test-crypto-env.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
@@ -39,6 +40,9 @@ before(async () => {
     const migration = await readFile(new URL('../migrations/20260924_sessions_prescriptions.sql', import.meta.url), 'utf8');
     await db.exec(migration);
     await db.exec(migration);
+    await db.exec(await readFile(new URL('../migrations/20260924_roles_audit.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../migrations/20260925_data_protection.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../migrations/20261109_encrypted_field_capacity.sql', import.meta.url), 'utf8'));
     for (const role of Object.keys(iins)) {
         const result = await call(register, { name: 'Тест ' + role, email: role + '@example.invalid', password, iin: iins[role], role: 'admin' });
         assert.equal(result.status, 200);
@@ -52,6 +56,9 @@ before(async () => {
     await sql`UPDATE users SET role = 'doctor', spec = 'Терапевт' WHERE iin = ${iins.doctor}`;
     await sql`UPDATE users SET role = 'doctor' WHERE iin = ${iins.doctor2}`;
     await sql`UPDATE users SET role = 'admin' WHERE iin = ${iins.admin}`;
+    doctorToken = (await call(login, { email: 'doctor@example.invalid', password })).body.token;
+    secondDoctorToken = (await call(login, { email: 'doctor2@example.invalid', password })).body.token;
+    adminToken = (await call(login, { email: 'admin@example.invalid', password })).body.token;
     doctorPublic = (await call(doctors, {}, null, { method: 'GET' })).body.doctors[0].iin;
 });
 after(async () => { await db?.close(); });
@@ -122,6 +129,11 @@ test('booking ownership, real doctor and slot uniqueness', async () => {
     assert.equal((await call(appointments, data, patientToken)).status, 409);
     const rows = await call(appointments, { action: 'get', patientIin: iins.patient }, patientToken);
     assert.equal(rows.body.appointments[0].doctor_iin, doctorPublic);
+    assert.equal(rows.body.appointments[0].message, '');
+    assert.match((await sql`SELECT message FROM appointments WHERE id = ${rows.body.appointments[0].id}`)[0].message, /^qmenc1\./);
+    const own = await call(appointments, { action: 'get_all_for_doctor', doctorIin: iins.doctor }, doctorToken);
+    assert.equal(own.status, 200);
+    assert.equal(own.body.appointments[0].doctor_iin, iins.doctor);
 });
 test('prescribe, patient scheduling, interval validation and isolation', async () => {
     const value = { action: 'create', patientIin: iins.patient, medicine: 'Тестовый препарат', dosage: 'По назначению', instructions: '', intervalHours: 8, durationDays: 7 };
@@ -129,6 +141,11 @@ test('prescribe, patient scheduling, interval validation and isolation', async (
     const result = await call(prescriptions, value, doctorToken);
     assert.equal(result.status, 200);
     prescriptionId = result.body.id;
+    const stored = (await sql`SELECT medicine, dosage, instructions FROM prescriptions WHERE id = ${prescriptionId}`)[0];
+    for (const value of Object.values(stored)) assert.match(value, /^qmenc1\./);
+    const visible = (await call(prescriptions, { action: 'get' }, patientToken)).body.prescriptions[0];
+    assert.equal(visible.medicine, value.medicine);
+    assert.equal(visible.dosage, value.dosage);
     const schedule = { action: 'schedule', id: prescriptionId, startAt: new Date(Date.now() + 86400000).toISOString(), timezone: 'Asia/Almaty', enabled: true };
     assert.equal((await call(prescriptions, schedule, otherToken)).status, 404);
     assert.equal((await call(prescriptions, schedule, doctorToken)).status, 403);
@@ -173,6 +190,12 @@ test('analyses cannot be read or written by unrelated patients or doctors', asyn
         assert.equal((await call(saveAnalysis, analysis, token)).status, 403);
     }
     assert.equal((await call(saveAnalysis, analysis, doctorToken)).status, 200);
+    const stored = (await sql`SELECT type, results FROM analyses WHERE patient_iin = ${iins.patient}`)[0];
+    assert.match(stored.type, /^qmenc1\./);
+    assert.match(stored.results._encrypted, /^qmenc1\./);
+    const visible = (await call(getAnalyses, { iin: iins.patient }, patientToken)).body.analyses[0];
+    assert.equal(visible.type, analysis.type);
+    assert.deepEqual(visible.results, analysis.results);
     assert.equal((await call(getAnalyses, { iin: iins.patient }, patientToken)).body.analyses.length, 1);
     assert.equal((await call(getAnalyses, { iin: iins.patient }, doctorToken)).body.analyses.length, 1);
     assert.equal((await call(getAnalyses, { iin: Number(iins.patient) }, patientToken)).status, 400);
@@ -205,7 +228,9 @@ test('doctor/patient chat is private and sender cannot be spoofed', async () => 
     assert.equal((await call(chat, message, otherToken)).status, 403);
     assert.equal((await call(chat, { ...message, sender: iins.other }, otherToken)).status, 403);
     assert.equal((await call(chat, message, patientToken)).status, 200);
+    assert.match((await sql`SELECT text FROM chat_messages WHERE sender = ${iins.patient}`)[0].text, /^qmenc1\./);
     const publicHistory = await call(chat, { ...message, action: 'get' }, patientToken);
+    assert.equal(publicHistory.body.messages[0].text, message.text);
     assert.equal(publicHistory.body.messages[0].receiver, doctorPublic);
     assert.equal(JSON.stringify(publicHistory.body).includes(iins.doctor), false);
     const legacyHistory = await call(chat, { ...message, action: 'get', receiver: iins.doctor }, patientToken);
@@ -279,11 +304,13 @@ test('an in-flight login cannot mint a usable session after a password change', 
 });
 
 test('administrator edits revoke target sessions and cannot delete clinical identities', async () => {
-    const result = await call(admin, { action: 'update', targetIin: iins.doctor2, name: 'Second doctor', email: 'doctor2@example.invalid', role: 'patient' }, adminToken);
+    const [{ id }] = await sql`SELECT id FROM users WHERE iin = ${iins.doctor2}`;
+    const result = await call(admin, { action: 'update', targetId: id, name: 'Second doctor', email: 'doctor2@example.invalid',
+        role: 'doctor', spec: 'Терапевт', city: 'Алматы', currentPassword: password }, adminToken);
     assert.equal(result.status, 200);
     assert.equal((await call(session, {}, secondDoctorToken, { method: 'GET' })).status, 401);
     assert.equal((await call(session, {}, adminToken, { method: 'GET' })).status, 200);
-    assert.equal((await call(admin, { action: 'delete', targetIin: iins.patient }, adminToken)).status, 409);
+    assert.equal((await call(admin, { action: 'delete', targetIin: iins.patient }, adminToken)).status, 400);
     assert.equal((await sql`SELECT id FROM users WHERE iin = ${iins.patient}`).length, 1);
 });
 test('clinic cities are allowlisted and incomplete upstream results are not shown as complete', async () => {

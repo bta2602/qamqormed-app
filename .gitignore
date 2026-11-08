@@ -1,5 +1,6 @@
 node_modules/
 public/
+verification/
 # Local Netlify folder
 .netlify
 .env
@@ -11,3 +12,13 @@ public/
 *.pfx
 *.log
 backups/
+secrets/
+*.jks
+*.keystore
+*.mobileprovision
+*.sql.gz
+*.dump
+credentials*.json
+service-account*.json
+*.dpapi
+*.vault.json
