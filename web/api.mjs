@@ -37,11 +37,15 @@ export function createApi(fetcher = fetch) {
     };
 }
 export const roleRoutes = {
-    patient: ['home', 'doctors', 'appointments', 'analyses', 'medicines', 'clinics', 'chat', 'profile'],
+    patient: ['home', 'doctors', 'appointments', 'analyses', 'medicines', 'clinics', 'chat', 'services', 'profile'],
     doctor: ['home', 'appointments', 'patients', 'analyses', 'medicines', 'chat', 'profile'],
     admin: ['home', 'users', 'recovery', 'audit', 'profile'],
 };
 export function canAccess(role, route) { return roleRoutes[role]?.includes(route) ?? false; }
+export function hasMedicalAccess(user) {
+    return ['patient', 'doctor'].includes(user?.role) && user.requiresIdentityVerification !== true &&
+        (user.identityStatus == null || user.identityStatus === 'VERIFIED') && /^\d{12}$/.test(user.iin ?? '');
+}
 export function patientsFrom(appointments) {
     return [...new Map(appointments.filter(a => ['upcoming', 'completed'].includes(a.status))
         .map(a => [a.patient_iin, { iin: a.patient_iin, name: a.patient_name || a.patient_iin }])).values()];

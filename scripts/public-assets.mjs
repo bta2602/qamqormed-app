@@ -1,10 +1,13 @@
-const modules = ['app', 'api', 'dom', 'i18n', 'ui', 'screens', 'clinical', 'catalog', 'admin'];
+const modules = ['app', 'api', 'dom', 'i18n', 'ui', 'screens', 'clinical', 'catalog', 'admin', 'welcome'];
 const icons = ['house', 'stethoscope', 'calendar-days', 'flask-conical', 'pill', 'hospital', 'messages-square',
     'user-round', 'users-round', 'shield-check', 'heart-pulse', 'moon', 'log-out', 'arrow-right', 'arrow-left',
     'refresh-cw', 'key-round', 'chevron-left', 'chevron-right', 'plus', 'pencil', 'file-heart', 'check', 'x',
-    'trash-2', 'circle-x', 'clock', 'inbox', 'sparkles', 'list', 'map', 'locate-fixed'];
+    'trash-2', 'circle-x', 'clock', 'inbox', 'sparkles', 'list', 'map', 'locate-fixed',
+    'layout-grid', 'eye', 'eye-off', 'sun', 'calendar-x', 'search'];
 export const publicAssets = [
     ['index.html', 'index.html'], ['web/styles.css', 'web/styles.css'],
+    ...['workspace', 'welcome', 'home', 'catalog'].map(name => [`web/${name}.css`, `web/${name}.css`]),
+    ...['brand', 'health', 'care', 'welcome'].map(name => [`web/art/${name}.webp`, `web/art/${name}.webp`]),
     ...modules.map(name => [`web/${name}.mjs`, `web/${name}.mjs`]),
     ['web/fonts/manrope.ttf', 'web/fonts/manrope.ttf'], ['web/fonts/Manrope-OFL.txt', 'web/fonts/Manrope-OFL.txt'],
     ...icons.map(name => [`node_modules/lucide-static/icons/${name}.svg`, `web/icons/${name}.svg`]),

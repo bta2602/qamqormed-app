@@ -31,6 +31,12 @@ it does not disable an already published insecure legacy version.
 
 ## Local Verification (No Credentials)
 
+For a read-only preview of the responsive website, run `npm run build` and
+`node scripts/preview-web.mjs`. Open `http://127.0.0.1:4780/preview/welcome`,
+or replace `welcome` with `patient`, `doctor`, or `admin` to view a synthetic
+workspace without signing in. The preview binds only to loopback, reads no
+secrets, does not send mail, and does not save changes. It is not deployed.
+
 Requires Node 24.x. No `.env` is needed for these commands:
 
 ```sh

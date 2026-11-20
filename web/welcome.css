@@ -1,0 +1,147 @@
+.qm-welcome {
+    --qw-outline: #788c90;
+    --qw-track: #bdced0;
+    background: linear-gradient(135deg, #e1f5ee, #edf6f8, #e7f5f4);
+    min-height: calc(100svh - 68px);
+    padding: 0;
+}
+:root[data-theme=dark] .qm-welcome {
+    --qw-outline: #809797;
+    --qw-track: #35484a;
+    background: linear-gradient(135deg, #132522, #172124, #121b1c);
+}
+.qw-layout {
+    max-width: 560px;
+    margin-inline: auto;
+    padding: 16px 24px max(32px, env(safe-area-inset-bottom));
+}
+.qw-signin, .qw-intro { min-width: 0; }
+.qw-signin-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.qw-phone-art { width: 88px; height: 88px; object-fit: contain; flex: none; }
+.qm-welcome :is(h1, h2) {
+    font-size: 1.857rem;
+    line-height: 1.31;
+    font-weight: 700;
+    text-wrap: balance;
+}
+.qw-signin-heading p, .qw-description p, .qw-register > span {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+.qw-signin-heading p { margin-top: 6px; }
+.qw-signin > .error { margin-block: 12px; }
+.qw-signin .form { gap: 0; margin-block: 12px 10px; }
+.qw-signin .field { gap: 8px; font-size: .875rem; font-weight: 500; }
+.qw-signin .field input {
+    border: 1px solid var(--qw-outline);
+    border-radius: 28px;
+    background: var(--surface-soft);
+    min-height: 52px;
+    padding: 12px 20px;
+    font-size: max(16px, 1.14rem);
+    font-weight: 400;
+}
+.qw-signin .field input::placeholder { color: var(--muted); opacity: 1; }
+.qw-signin .field input:focus-visible { outline: 2px solid var(--teal); outline-offset: 0; }
+.qw-password { position: relative; margin-top: 16px; }
+.qw-signin .qw-password .field input { padding-inline-end: 58px; }
+.qw-password input::-ms-reveal { display: none; }
+.qw-password .icon-button {
+    position: absolute;
+    inset-inline-end: 5px;
+    bottom: 4px;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+}
+.qw-password .icon { width: 21px; height: 21px; }
+.qw-signin .form > .error:not([hidden]) { margin-top: 12px; }
+.qw-signin .form > .qw-forgot {
+    justify-self: end;
+    min-width: 0;
+    padding-inline: 4px;
+    margin-block: 2px;
+}
+.qm-welcome .button { font-size: 1rem; font-weight: 600; }
+.qw-signin .form > .primary, .qw-pager .primary {
+    width: 100%;
+    min-width: 0;
+    min-height: 52px;
+    border-radius: 32px;
+    padding: 12px 20px;
+}
+.qw-signin .button .icon { display: none; }
+.qw-register {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0 8px;
+    text-align: center;
+}
+.qw-register .button { min-height: 44px; padding: 6px 2px; }
+.qw-register .button.secondary {
+    padding-inline: 16px;
+    border: 1px solid var(--qw-outline);
+    border-radius: 24px;
+    background: transparent;
+}
+.qw-intro {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    margin-top: 22px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+}
+.qw-illustration {
+    display: block;
+    width: 100%;
+    height: clamp(180px, 32svh, 300px);
+    object-fit: contain;
+    touch-action: pan-y pinch-zoom;
+    user-select: none;
+}
+.qw-description { width: 100%; }
+.qw-description :is(h2, p) { white-space: pre-line; }
+.qw-description p { margin: 12px auto 0; max-width: 44ch; text-wrap: pretty; }
+.qw-progress { display: flex; justify-content: center; gap: 6px; margin-bottom: 20px; }
+.qw-progress span { width: 36px; height: 3px; background: var(--qw-track); border-radius: 3px; }
+.qw-progress .qw-filled { background: var(--teal); }
+.qw-pager {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 360px;
+    margin-top: 6px;
+}
+.qw-pager .icon-button { width: 48px; height: 48px; border-radius: 50%; border-color: var(--qw-outline); }
+
+@media (min-width: 761px) {
+    .qm-welcome { display: grid; align-items: center; min-height: calc(100svh - 80px); }
+    .qw-layout {
+        width: 100%;
+        max-width: 1160px;
+        padding: 40px clamp(28px, 4%, 56px);
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        grid-template-areas: "intro signin";
+        align-items: center;
+        column-gap: clamp(32px, 6%, 80px);
+    }
+    .qw-intro { grid-area: intro; border: none; margin: 0; padding: 0; }
+    .qw-illustration { height: clamp(220px, 42svh, 380px); }
+    .qw-description { min-height: 148px; align-content: center; }
+    .qw-signin { grid-area: signin; padding-inline-start: clamp(24px, 8%, 46px); border-inline-start: 1px solid var(--line); }
+    .qw-phone-art { display: none; }
+    .qw-signin .form { margin-block: 28px 18px; }
+}
+@media (max-width: 359px) {
+    .qw-layout { padding-inline: 16px; }
+    .qw-phone-art { width: 66px; height: 66px; }
+}

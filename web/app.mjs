@@ -1,8 +1,9 @@
 import { el, icon, button, iconButton, field, select } from './dom.mjs';
-import { t, language, setLanguage } from './i18n.mjs';
-import { createApi, roleRoutes, canAccess } from './api.mjs';
+import { t, language, setLanguage, headingDate } from './i18n.mjs';
+import { createApi, roleRoutes, canAccess, hasMedicalAccess } from './api.mjs';
 import { form, notice, passwordField, newPasswordField, validPassword, validation, errorText } from './ui.mjs';
 import { screens } from './screens.mjs';
+import { welcomeScreen } from './welcome.mjs';
 
 const api = createApi();
 const app = document.getElementById('app');
@@ -12,6 +13,7 @@ let recoveryMode = false, recoveryStatus = 'request';
 const symbols = { home: 'house', doctors: 'stethoscope', appointments: 'calendar-days', analyses: 'flask-conical', medicines: 'pill', clinics: 'hospital', chat: 'messages-square', profile: 'user-round', patients: 'users-round', users: 'users-round', audit: 'shield-check' };
 // Only appearance preferences are persisted. Never serialize API responses or identities.
 symbols.recovery = 'key-round';
+symbols.services = 'layout-grid';
 try {
     for (const key of Object.keys(localStorage)) {
         if (['qamqorAccount', 'qamqorSession', 'qamqorSavedEmail'].includes(key) || key.startsWith('qamqorNotifs_')) {
@@ -25,7 +27,7 @@ function preference(key, value) {
 setLanguage(preference('language'));
 document.documentElement.dataset.theme = preference('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 function settings() {
-    const langs = el('div', { class: 'segmented', 'aria-label': t('language') }, ['ru', 'kk'].map(code => el('button', {
+    const langs = el('div', { class: 'segmented', role: 'group', 'aria-label': t('language') }, ['kk', 'ru'].map(code => el('button', {
         type: 'button', text: code === 'kk' ? 'ҚАЗ' : 'РУС', 'aria-pressed': String(language === code),
         onClick: () => { setLanguage(code); preference('language', code); render(); },
     })));
@@ -34,9 +36,11 @@ function settings() {
         document.documentElement.dataset.theme = next;
         preference('theme', next);
         theme.setAttribute('aria-pressed', String(next === 'dark'));
-    }, 'moon');
+        theme.replaceChildren(icon(next === 'dark' ? 'sun' : 'moon'));
+    }, document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon');
     theme.setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'dark'));
-    return el('div', { class: 'settings' }, langs, theme);
+    return el('div', { class: 'settings' }, langs, theme, user && el('a', {
+        class: 'account-link', href: '#profile', title: t('profile'), 'aria-label': t('profile') }, icon('user-round')));
 }
 function clear() {
     api.reset();
@@ -49,7 +53,7 @@ function context() {
         user, api, symbols, route, sessionState,
         alive: () => generation === api.generation,
         cleanup: fn => cleanup.push(fn),
-        navigate,
+        navigate, logout,
         refresh: () => render(),
         expire: () => { user = null; sessionState = {}; registration = false; route = 'home'; history.replaceState(null, '', '#home'); render(t('expired')); },
         updateUser: value => { user = value; },
@@ -80,9 +84,7 @@ function auth(ctx, message) {
         field(t('email'), 'email', { type: 'email', required: true, maxLength: 100, autocomplete: 'username' }),
         registration ? newPasswordField() : passwordField(t('password'), 'password'),
         registration && notice(t('passwordRule'))];
-    return el('main', { class: 'auth' }, icon('heart-pulse'), el('h1', { text: 'QamqorMed' }), el('h2', { text: t(registration ? 'register' : 'login') }),
-        message && el('p', { role: 'alert', class: 'error', text: message }),
-        form(ctx, fields, async data => {
+    const loginForm = form(ctx, fields, async data => {
             if (registration && !validPassword(data.password)) validation(t('passwordRule'));
             await api.request(registration ? 'register' : 'login', data, { write: true });
             // Ignore the mobile bearer token response: only a server-verified cookie grants web access.
@@ -91,9 +93,12 @@ function auth(ctx, message) {
             if (!ctx.alive()) return;
             user = session.user;
             route = 'home'; history.replaceState(null, '', '#home'); render();
-        }, t(registration ? 'register' : 'login')),
-        button(t(registration ? 'login' : 'register'), () => { registration = !registration; render(); }, 'arrow-right', 'text-button'),
-        !registration && button(t('forgot'), () => { recoveryMode = true; render(); }, 'key-round', 'text-button'));
+    }, t(registration ? 'register' : 'login'));
+    const registerButton = button(t(registration ? 'login' : 'register'), () => { registration = !registration; render(); }, 'arrow-right', 'secondary');
+    if (registration) return el('main', { class: 'auth' }, el('h1', { text: t('register') }),
+        message && el('p', { role: 'alert', class: 'error', text: message }), loginForm, registerButton);
+    return welcomeScreen({ loginForm, registerButton, message,
+        forgotButton: button(t('forgot'), () => { recoveryMode = true; render(); }, null, 'text-button') });
 }
 function recoveryForm(ctx) {
     const root = el('main', { class: 'auth' }, el('h1', { text: t('recovery') }));
@@ -129,22 +134,53 @@ function render(message) {
     const ctx = context();
     document.documentElement.lang = language;
     app.setAttribute('aria-busy', 'false');
-    const brand = el('a', { class: 'brand', href: '#home' }, icon('heart-pulse'), el('span', { text: 'QamqorMed' }));
-    const header = el('header', { class: 'topbar' }, brand, user && el('span', { class: 'role-label', text: t(user.role + 'Space') }), settings());
+    const brand = el('a', { class: 'brand', href: '#home' },
+        el('span', { class: 'brand-mark' }, el('img', { src: '/web/art/brand.webp', width: 40, height: 40, alt: '' })),
+        el('span', {}, 'Qamqor', el('b', { text: 'Med' })));
+    const header = el('header', { class: 'topbar' }, el('div', { class: 'topbar-inner' }, brand,
+        user && el('span', { class: 'role-label', text: t(user.role + 'Space') }), settings()));
     if (!user) { app.replaceChildren(header, auth(ctx, message)); return; }
     const desired = location.hash.slice(1) || 'home';
     route = canAccess(user.role, desired) ? desired : 'home';
     if (route !== desired) history.replaceState(null, '', '#home');
-    const routes = roleRoutes[user.role];
-    const primary = user.role === 'patient' ? ['home', 'appointments', 'chat', 'profile'] : user.role === 'doctor' ? ['home', 'appointments', 'patients', 'profile'] : ['home', 'users', 'audit', 'profile'];
-    function navLink(key) {
-        return el('a', { href: '#' + key, class: 'nav-item', ...(key === route ? { 'aria-current': 'page' } : {}) }, icon(symbols[key]), el('span', { text: t(key) }));
+    const pending = user.role === 'patient' && !hasMedicalAccess(user);
+    const routes = pending ? ['home', 'doctors', 'clinics', 'profile'] : roleRoutes[user.role];
+    const primary = pending ? routes : user.role === 'patient' ? ['home', 'appointments', 'chat', 'services'] : user.role === 'doctor' ? ['home', 'appointments', 'chat', 'patients'] : ['home', 'users', 'audit'];
+    function navLink(key, compact = false) {
+        const short = t(({ appointments: 'shortVisits', chat: 'shortChat', patients: 'shortPatients', users: 'shortUsers',
+            audit: 'shortAudit', identity: 'shortIdentity', recovery: 'shortRecovery' })[key] || key);
+        return el('a', { href: '#' + key, class: 'nav-item', title: t(key), 'aria-label': t(key),
+            ...(key === route ? { 'aria-current': 'page' } : compact && key === 'services' && !primary.includes(route)
+                ? { 'aria-current': 'location' } : {}) }, icon(symbols[key]),
+            compact ? el('span', { text: short }) : [el('span', { class: 'nav-full', text: t(key) }), el('span', { class: 'nav-short', text: short })]);
     }
-    const sidebar = el('aside', { class: 'sidebar' }, el('div', { class: 'identity' }, el('strong', { text: user.name }), el('span', { class: 'muted', text: t(user.role) })),
-        el('nav', { 'aria-label': 'QamqorMed' }, routes.map(navLink)), button(t('logout'), logout, 'log-out', 'text-button'));
-    const main = el('main', { id: 'main', tabIndex: -1 }, el('div', { class: 'page-heading' }, el('div', {}, el('p', { class: 'eyebrow', text: t(user.role + 'Space') }), el('h1', { text: t(route) })), iconButton(t('refresh'), () => render(), 'refresh-cw')));
-    app.replaceChildren(header, el('div', { class: 'app-layout' }, sidebar, main), el('nav', { class: 'bottomnav', 'aria-label': 'QamqorMed mobile' }, primary.map(navLink)));
-    screens[route]({ ...ctx, route }, main);
+    const groups = user.role === 'patient'
+        ? [['myAccount', ['home', 'appointments', 'chat', 'services']], ['medicalRecord', ['analyses', 'medicines']], ['directory', ['doctors', 'clinics']]]
+        : [['workspace', routes.filter(key => key !== 'profile')]];
+    const nav = el('nav', { 'aria-label': t('navigation') });
+    for (const [title, keys] of groups) {
+        const available = keys.filter(key => routes.includes(key));
+        if (available.length) nav.append(el('div', { class: 'nav-group', role: 'group', 'aria-label': t(title) },
+            el('p', { class: 'nav-caption', 'aria-hidden': 'true', text: t(title) }), available.map(key => navLink(key))));
+    }
+    const sidebar = el('aside', { class: 'sidebar' }, nav, el('div', { class: 'account-menu' },
+        el('a', { class: 'identity', href: '#profile', title: t('profile'), ...(route === 'profile' ? { 'aria-current': 'page' } : {}) }, icon('user-round'),
+            el('div', {}, el('strong', { text: user.name }), el('span', { text: t(user.role) }))),
+        iconButton(t('logout'), logout, 'log-out')));
+    const main = el('main', { id: 'main', tabIndex: -1, 'data-route': route }, el('div', { class: 'page-heading' }, el('div', {},
+        el('p', { class: 'eyebrow', text: route === 'home' ? headingDate() : t(user.role + 'Space') }),
+        el('h1', { text: t(route) })), !['chat', 'clinics'].includes(route) && iconButton(t('refresh'), () => render(), 'refresh-cw')));
+    const skip = el('button', { type: 'button', class: 'skip-link', text: t('skipContent'), onClick: () => main.focus() });
+    app.replaceChildren(skip, header, el('div', { class: 'app-layout' }, sidebar, main),
+        el('nav', { class: 'bottomnav', 'aria-label': t('navigation') }, primary.map(key => navLink(key, true))));
+    if (pending && !routes.includes(route)) main.append(el('section', { class: 'identity-pending', role: 'status' },
+        el('h2', { text: t('pendingTitle') }), notice(t('pendingBody')), button(t('home'), () => navigate('home'), 'arrow-left')));
+    else if (route === 'services') {
+        for (const [title, keys] of [['directory', ['doctors', 'clinics', 'appointments']], ['medicalRecord', ['analyses', 'medicines']], ['myAccount', ['chat', 'profile']]]) {
+            main.append(el('section', { class: 'service-section' }, el('h2', { text: t(title) }), el('div', { class: 'service-rows' },
+                keys.map(key => el('a', { href: '#' + key }, icon(symbols[key]), el('span', { text: t(key) }), icon('chevron-right'))))));
+        }
+    } else screens[route]({ ...ctx, route }, main);
     main.focus({ preventScroll: true });
     window.scrollTo(0, 0);
 }

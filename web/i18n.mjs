@@ -1,4 +1,12 @@
 const words = {
+    services: ['Сервисы', 'Қызметтер'], directory: ['Найти помощь', 'Көмек табу'],
+    myAccount: ['Личный кабинет', 'Жеке кабинет'], navigation: ['Навигация', 'Навигация'],
+    workspace: ['Рабочее место', 'Жұмыс орны'], skipContent: ['К содержимому', 'Мазмұнға өту'],
+    shortVisits: ['Приёмы', 'Қабылдаулар'], shortChat: ['Чат', 'Чат'],
+    shortUsers: ['Аккаунты', 'Аккаунттар'], shortIdentity: ['Проверки', 'Тексеру'],
+    shortRecovery: ['Запросы', 'Сұраулар'], shortAudit: ['Аудит', 'Аудит'], shortPatients: ['Пациенты', 'Пациенттер'],
+    pendingTitle: ['Личность ещё не подтверждена', 'Жеке тұлға әлі расталмады'],
+    pendingBody: ['Подтверждение почты и введённые данные не подтверждают личность. Медкарта, запись к врачу, анализы, лекарства и чат закрыты до отдельной проверки. Каталоги врачей и клиник доступны.', 'Поштаны растау және енгізілген деректер жеке тұлғаны растамайды. Жеке тексеруге дейін медициналық карта, дәрігерге жазылу, талдаулар, дәрілер мен чат жабық. Дәрігерлер мен клиникалар каталогтары қолжетімді.'],
     recovery: ['Восстановление доступа', 'Қолжетімділікті қалпына келтіру'],
     forgot: ['Забыли пароль?', 'Құпиясөзді ұмыттыңыз ба?'],
     recoveryPending: ['Если данные совпадают с активным аккаунтом пациента, запрос передан администратору. Запрос действует 24 часа. Проверяйте ответ на этом устройстве; после одобрения есть 15 минут для смены пароля.', 'Деректер белсенді пациент аккаунтымен сәйкес болса, сұрау әкімшіге жіберілді. Сұрау 24 сағат жарамды. Жауапты осы құрылғыда тексеріңіз; мақұлданғаннан кейін құпиясөзді өзгертуге 15 минут беріледі.'],
@@ -69,14 +77,30 @@ const words = {
     unknownWrite: ['Ответ не получен. Перед повтором обновите данные: действие могло сохраниться.', 'Жауап алынбады. Қайталамас бұрын деректерді жаңартыңыз: әрекет сақталған болуы мүмкін.'],
 };
 export const languages = ['ru', 'kk'];
-export let language = 'ru';
-export function setLanguage(value) { language = languages.includes(value) ? value : 'ru'; }
+export let language = 'kk';
+export function setLanguage(value) { language = languages.includes(value) ? value : 'kk'; }
 export function t(key) { return words[key]?.[language === 'kk' ? 1 : 0] ?? String(key ?? ''); }
+// Some Chromium builds expose kk-KZ but render fallback month names like "M11".
+const kzParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Almaty', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const calendarParts = date => Object.fromEntries(kzParts.formatToParts(date).map(({ type, value }) => [type, value]));
+const kkMonths = 'қаңтар ақпан наурыз сәуір мамыр маусым шілде тамыз қыркүйек қазан қараша желтоқсан'.split(' ');
+export function headingDate(date = new Date()) {
+    if (language === 'ru') return new Intl.DateTimeFormat('ru-KZ', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Almaty' }).format(date);
+    const { year, month, day } = calendarParts(date);
+    const weekday = new Date(Date.UTC(+year, +month - 1, +day)).getUTCDay();
+    return ['жексенбі','дүйсенбі','сейсенбі','сәрсенбі','бейсенбі','жұма','сенбі'][weekday] + ', ' + Number(day) + ' ' + kkMonths[+month - 1];
+}
 export function localeDate(value, withTime = false) {
     const date = new Date(value);
-    return Number.isFinite(+date) ? new Intl.DateTimeFormat(language === 'kk' ? 'kk-KZ' : 'ru-KZ', {
+    if (!Number.isFinite(+date)) return String(value ?? '');
+    if (language === 'kk') {
+        const { year, month, day, hour, minute } = calendarParts(date);
+        return Number(day) + ' ' + kkMonths[+month - 1] + ' ' + year + ' ж.' + (withTime ? ', ' + hour + ':' + minute : '');
+    }
+    return new Intl.DateTimeFormat('ru-KZ', {
         dateStyle: 'medium', ...(withTime ? { timeStyle: 'short' } : {}), timeZone: 'Asia/Almaty',
-    }).format(date) : String(value ?? '');
+    }).format(date);
 }
-export function today() { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Almaty' }).format(new Date()); }
+export function today() { const { year, month, day } = calendarParts(new Date()); return [year, month, day].join('-'); }
 export const cities = [['astana', 'Астана'], ['almaty', 'Алматы'], ['shymkent', 'Шымкент'], ['aktau', 'Ақтау'], ['zhezkazgan', 'Жезқазған']];

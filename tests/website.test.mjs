@@ -1,4 +1,4 @@
-import test, { before, after } from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { readFile, mkdir } from 'node:fs/promises';
@@ -6,11 +6,17 @@ import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { publicAssets } from '../scripts/public-assets.mjs';
 import { canAccess, createApi } from '../web/api.mjs';
+import { headingDate, localeDate, setLanguage } from '../web/i18n.mjs';
 
 let server, browser, base;
 const allowed = new Set(publicAssets.map(([, path]) => '/' + path));
 const root = new URL('../public/', import.meta.url);
-before(async () => {
+let browserSetup;
+function prepareBrowser() {
+    if (!browserSetup) browserSetup = startBrowser();
+    return browserSetup;
+}
+async function startBrowser() {
     execFileSync(process.execPath, ['scripts/build.mjs'], { cwd: new URL('../', import.meta.url), windowsHide: true });
     server = createServer(async (request, response) => {
         const path = new URL(request.url, 'http://localhost').pathname;
@@ -23,15 +29,22 @@ before(async () => {
     });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     base = 'http://127.0.0.1:' + server.address().port;
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ headless: true,
+        ...(process.env.QAMQOR_TEST_BROWSER ? { executablePath: process.env.QAMQOR_TEST_BROWSER } :
+            process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}),
+        args: ['--disable-gpu', '--renderer-process-limit=1'] });
     await mkdir(new URL('../verification/2026-09-25', import.meta.url), { recursive: true });
     await mkdir(new URL('../verification/2026-11-08', import.meta.url), { recursive: true });
-});
+}
 after(async () => { await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); });
-async function pageFor(t, role = null, viewport = { width: 390, height: 844 }) {
+async function pageFor(t, role = null, viewport = { width: 390, height: 844 }, preferredLanguage = 'ru') {
+    await prepareBrowser();
     const context = await browser.newContext({ viewport });
     t.after(() => context.close());
     const page = await context.newPage();
+    await page.addInitScript(locale => {
+        if (locale && localStorage.getItem('qamqor.language') === null) localStorage.setItem('qamqor.language', locale);
+    }, preferredLanguage);
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     const requests = [];
@@ -90,7 +103,7 @@ test('recovery opens new-password form only after status approval; never saves t
     await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
     await page.getByText('Пароль изменён. Войдите с новым паролем.', { exact: true }).waitFor();
     assert.equal(requests.filter(r => r.endpoint === 'password-recovery' && r.data.action === 'complete').length, 1);
-    assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+    assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), ['qamqor.language']);
     assert.deepEqual(errors, []);
 });
 test('administrator recovery review requires acknowledgement and password', async t => {
@@ -131,6 +144,53 @@ test('route guards exclude privileged screens from patients and doctor writes fr
     assert.equal(canAccess('doctor', 'users'), false);
     assert.equal(canAccess('admin', 'medicines'), false);
     assert.equal(canAccess('admin', 'recovery'), true);
+});
+
+test('first visit opens the Kazakh sign-in and an optional introduction; language choice survives reload', async t => {
+    const { page } = await pageFor(t, null, { width: 1366, height: 768 }, null);
+    assert.equal(await page.locator('html').getAttribute('lang'), 'kk');
+    await page.locator('.qw-signin input[name=email]').fill('sample@example.invalid');
+    await page.locator('.qw-pager .primary').click();
+    assert.equal(await page.locator('.qw-signin input[name=email]').inputValue(), 'sample@example.invalid');
+    await page.getByRole('button', { name: 'РУС', exact: true }).click();
+    await page.reload();
+    await page.getByRole('button', { name: 'Забыли пароль?' }).waitFor();
+    assert.equal(await page.locator('html').getAttribute('lang'), 'ru');
+});
+
+test('Kazakh headings and appointment timestamps use the same Kazakhstan calendar day', () => {
+    setLanguage('kk');
+    const late = new Date('2026-11-20T19:30:00Z');
+    assert.equal(headingDate(late), 'сенбі, 21 қараша');
+    assert.equal(localeDate(late, true), '21 қараша 2026 ж., 00:30');
+});
+
+test('the same patient menu reflows across phone, tablet, laptop and desktop', async t => {
+    const { page, errors } = await pageFor(t, 'patient');
+    for (const width of [320,390,768,1024,1366,1920]) {
+        await page.setViewportSize({ width, height: 900 });
+        const dock = page.locator('.bottomnav');
+        const rail = page.locator('.sidebar');
+        assert.equal(await dock.isVisible(), width <= 760);
+        assert.equal(await rail.isVisible(), width > 760);
+        await page.locator('.home-shortcuts').waitFor();
+        const rows = await page.locator('.home-shortcut').evaluateAll(items => {
+            const counts = new Map();
+            for (const item of items) { const y = item.offsetTop; counts.set(y, (counts.get(y) || 0) + 1); }
+            return [...counts.values()];
+        });
+        assert.deepEqual(rows, [4,4], String(width));
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), String(width));
+        const menu = width <= 760 ? dock : rail;
+        await menu.locator('a[href="#services"]').click();
+        await page.locator('[data-route="services"] .service-rows a[href="#analyses"]').click();
+        await page.locator('[data-route="analyses"] .empty').waitFor();
+        await page.locator('.account-link').click();
+        await page.locator('[data-route="profile"]').waitFor();
+        await menu.locator('a[href="#home"]').click();
+        await page.locator('.home-shortcuts').waitFor();
+    }
+    assert.deepEqual(errors, []);
 });
 
 for (const locale of [
@@ -209,7 +269,7 @@ test('upgrade removes only legacy identity/notification caches and never trusts 
     });
     await page.reload();
     await page.getByRole('button', { name: 'Забыли пароль?' }).waitFor();
-    assert.deepEqual(await page.evaluate(() => Object.keys(localStorage).sort()), ['qamqor.theme', 'unrelated-preference']);
+    assert.deepEqual(await page.evaluate(() => Object.keys(localStorage).sort()), ['qamqor.language', 'qamqor.theme', 'unrelated-preference']);
     assert.equal(await page.locator('.sidebar').count(), 0);
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
 });

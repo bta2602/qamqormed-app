@@ -1,0 +1,295 @@
+/* The same portrait card appears in the directory and the home preview. */
+.doctor-grid:has(> .catalog-doctor) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: 16px;
+}
+.catalog-doctor {
+    position: relative;
+    padding: 8px;
+    gap: 10px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px #17393709;
+}
+.catalog-doctor:is(:hover, :focus-within) { border-color: var(--teal); }
+.catalog-photo { position: relative; min-width: 0; }
+.catalog-photo .portrait {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    background: var(--mint);
+}
+.catalog-photo .portrait .icon { width: 50px; height: 50px; opacity: .65; }
+.catalog-rating {
+    position: absolute;
+    inset: auto 8px 8px auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: .84rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+.catalog-rating > [aria-hidden] { color: var(--teal); }
+.catalog-identity { padding-inline: 5px; }
+.catalog-identity h3 { font-size: 1.07rem; line-height: 1.35; }
+.catalog-identity p, .catalog-identity small, .catalog-card-foot { color: var(--muted); }
+.catalog-identity p { margin-top: 3px; font-size: .92rem; }
+.catalog-identity small { display: block; margin-top: 4px; font-size: .82rem; }
+.catalog-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: auto;
+    padding: 0 4px 3px;
+    font-size: .86rem;
+}
+.catalog-card-foot .icon-button {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--teal);
+}
+/* The real, keyboard-focusable open button is also the whole card's pointer target. */
+.catalog-card-foot .icon-button::after { content: ""; position: absolute; inset: 0; border-radius: 20px; }
+.catalog-card-foot .icon-button .icon { width: 18px; height: 18px; filter: brightness(0) invert(1); }
+:root[data-theme=dark] .catalog-card-foot .icon-button .icon { filter: brightness(0); }
+.catalog-doctors .filters {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 12px;
+    margin: 0 0 18px;
+}
+.catalog-doctors .field, .catalog-clinics .field { gap: 4px; }
+.catalog-doctors :is(input, select), .catalog-clinics select {
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: .94rem;
+}
+
+.dialog:has(.catalog-booking) { width: min(62rem, calc(100% - 2rem)); }
+.catalog-booking {
+    display: grid;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: 24px;
+    align-items: start;
+}
+.booking-profile { display: grid; gap: 14px; }
+.booking-profile .portrait { aspect-ratio: 5 / 3; }
+.booking-facts h3, .booking-bio h3 { margin-bottom: 5px; }
+.booking-bio p { color: var(--muted); }
+.catalog-booking > .form {
+    gap: 14px;
+    margin: 0;
+    padding-inline-start: 24px;
+    border-inline-start: 1px solid var(--line);
+}
+.catalog-booking > .notice {
+    margin: 0;
+    padding: 14px;
+    background: var(--mint);
+    border-inline-start: 3px solid var(--teal);
+}
+.booking-choices { border: 0; margin: 0; padding: 0; min-width: 0; }
+.booking-choices legend { padding: 0; margin-bottom: 7px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.booking-options { display: grid; }
+.booking-time { grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.3rem), 1fr)); gap: 6px; }
+.booking-options label { position: relative; cursor: pointer; min-width: 0; }
+.booking-options input.sr-only { width: 1px; height: 1px; min-height: 0; }
+.booking-options label > span {
+    display: grid;
+    place-items: center;
+    padding: 8px 5px;
+    min-height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: .93rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+.booking-options input:checked + span { color: var(--teal); border-color: var(--teal); background: var(--mint); }
+.booking-options input:focus-visible + span { outline: 3px solid var(--blue); outline-offset: 2px; }
+.booking-options input:disabled + span { opacity: .65; }
+.booking-type { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.booking-type label:first-child > span { border-radius: 20px 0 0 20px; }
+.booking-type label:last-child > span { border-radius: 0 20px 20px 0; }
+.catalog-booking textarea { min-height: 64px; }
+.catalog-booking .form > .button { justify-self: stretch; }
+
+.clinic-controls, .clinic-actions, .clinic-switch {
+    display: flex;
+    gap: 8px;
+    align-items: end;
+}
+.clinic-controls { justify-content: space-between; flex-wrap: wrap; }
+.clinic-controls > .field { width: 12rem; max-width: 100%; }
+.clinic-controls .icon-button, .chat-head .icon-button { width: 42px; height: 42px; background: var(--surface); }
+.clinic-switch { gap: 0; }
+.clinic-switch .button { border-radius: 20px 0 0 20px; min-height: 42px; padding: 8px 16px; }
+.clinic-switch .button:last-child { border-radius: 0 20px 20px 0; }
+.clinic-switch .button[aria-pressed=true] { background: var(--mint); border-color: var(--teal); }
+.clinic-switch .icon { width: 18px; height: 18px; }
+.catalog-clinics [role=status]:not(:empty) { margin-block: 10px; }
+.catalog-clinics .clinic-list {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 23rem), 1fr));
+    gap: 10px;
+}
+.catalog-clinic { display: flex; min-width: 0; }
+.catalog-clinic > button {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    text-align: start;
+    color: var(--text);
+    background: var(--surface);
+}
+.catalog-clinic > button:hover { border-color: var(--teal); }
+.clinic-symbol, .chat-avatar {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--mint);
+}
+.clinic-identity { display: grid; gap: 4px; line-height: 1.45; }
+.clinic-identity > span { color: var(--muted); font-size: .9rem; }
+.catalog-clinic > button > .icon { width: 16px; }
+.catalog-clinic-detail > a { display: inline-block; padding-block: 12px; font-weight: 700; text-decoration: underline; }
+.catalog-clinics .map { height: clamp(260px, 56dvh, 600px); }
+
+.chat-workspace.catalog-chat {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "log" "policy" "compose";
+    max-width: none;
+    margin: 0;
+}
+.chat-head {
+    grid-area: head;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding-block: 6px 12px;
+    border-bottom: 1px solid var(--line);
+}
+.chat-avatar { border-radius: 50%; background: var(--cyan); }
+.chat-peer { min-width: 0; }
+.chat-peer .field { position: relative; }
+.chat-peer select {
+    width: max-content;
+    max-width: 100%;
+    min-height: 32px;
+    padding: 3px 4px;
+    background-color: var(--surface);
+    font-size: 1.07rem;
+    font-weight: 750;
+}
+.chat-peer small { display: block; margin-top: 3px; }
+.chat-peer .field > span, .chat-composer .field > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+.catalog-chat .messages {
+    grid-area: log;
+    min-width: 0;
+    height: clamp(220px, 49dvh, 590px);
+    gap: 10px;
+    padding: 14px 2px;
+    border: 0;
+    overflow-y: auto;
+}
+.catalog-chat .messages > * { flex: none; }
+.catalog-chat .messages > :first-child { margin-block-start: auto; }
+.catalog-chat .empty { align-self: stretch; margin-block: auto; }
+.chat-welcome { display: grid; justify-items: start; gap: 8px; }
+.chat-welcome .button { text-align: start; justify-content: start; padding: 8px 12px; }
+.chat-welcome .icon { width: 16px; height: 16px; }
+.catalog-chat:has(.chat-composer textarea:not(:placeholder-shown)) .chat-welcome .button { display: none; }
+.catalog-chat .message {
+    max-width: min(90%, 65ch);
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 16px 16px 16px 4px;
+    background: var(--surface);
+}
+.catalog-chat .message strong { color: var(--teal); font-size: .85rem; }
+.catalog-chat .message p { margin-block-start: 4px; }
+.catalog-chat .message time { margin-block-start: 4px; font-size: .77rem; color: var(--muted); }
+.catalog-chat .sent { background: var(--teal); color: white; border-color: transparent; border-radius: 16px 16px 4px 16px; }
+.catalog-chat .sent :is(strong, time) { color: inherit; }
+:root[data-theme=dark] .catalog-chat .sent { color: #0e3535; }
+.chat-privacy {
+    grid-area: policy;
+    align-self: start;
+    display: grid;
+    gap: 8px;
+    padding-block: 12px;
+    border-top: 1px solid var(--line);
+}
+.chat-policy-heading { display: flex; gap: 7px; align-items: center; }
+.chat-policy-heading .icon { width: 17px; height: 17px; }
+.chat-privacy .notice { margin: 0; line-height: 1.45; font-size: .88rem; }
+.chat-privacy .checkbox-field { align-items: start; gap: 8px; padding-block: 4px; }
+.chat-privacy .checkbox-field > span { color: var(--text); line-height: 1.45; }
+.catalog-chat > .chat-composer {
+    grid-area: compose;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 8px;
+    margin: 0;
+    padding-block-start: 10px;
+    border-top: 1px solid var(--line);
+}
+.chat-composer textarea { min-height: 44px; max-height: 12rem; }
+.catalog-chat > .chat-composer > .button { min-width: 44px; width: 44px; height: 44px; padding: 0; border-radius: 14px; }
+
+@media (min-width: 1080px) {
+    .catalog-chat:has(.chat-privacy:not([hidden])) {
+        grid-template-columns: minmax(0, 1fr) minmax(17rem, 28%);
+        grid-template-areas: "head policy" "log policy" "compose policy";
+        column-gap: 26px;
+    }
+    .chat-privacy { border-top: 0; border-inline-start: 1px solid var(--line); padding: 12px 0 12px 22px; gap: 14px; }
+}
+@media (max-width: 760px) {
+    .doctor-grid:has(> .catalog-doctor) { grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.4rem), 1fr)); gap: 10px; }
+    .catalog-doctor { padding: 7px; gap: 8px; }
+    .catalog-photo .portrait { aspect-ratio: 1.2; }
+    .catalog-identity h3 { font-size: 1rem; }
+    .catalog-doctors .filters { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 8px; margin-bottom: 12px; }
+    .catalog-doctors .filters > .field:first-child { grid-column: 1 / -1; }
+    .dialog:has(.catalog-booking) { width: calc(100% - 16px); padding: 16px; }
+    .catalog-booking { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .booking-profile { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: center; gap: 10px; }
+    .booking-profile .portrait { aspect-ratio: 1.2; }
+    .booking-facts .detail { flex-wrap: wrap; gap: 2px 8px; }
+    .booking-facts .detail > span:first-child { flex: auto; }
+    .booking-bio { grid-column: 1 / -1; }
+    .catalog-booking > .form { border-inline-start: 0; border-top: 1px solid var(--line); padding: 12px 0 0; gap: 10px; }
+    .clinic-controls { column-gap: 10px; row-gap: 8px; }
+    .clinic-controls > .field { width: 8rem; }
+    .clinic-switch .button { padding-inline: 10px; }
+    .clinic-actions { flex-wrap: wrap; }
+    .catalog-chat .messages { height: clamp(180px, 32dvh, 350px); }
+    .catalog-chat:has(.chat-privacy[hidden]) .messages { height: clamp(210px, 53dvh, 520px); }
+    .chat-privacy { gap: 6px; padding-block: 8px; }
+    .chat-head { gap: 8px; padding-block: 0 8px; }
+}
